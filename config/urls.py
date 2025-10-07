@@ -22,7 +22,9 @@ urlpatterns = [
         path('notification/', include('apps.notification.urls')),
         path('chat/', include('apps.chat.urls')),
         path('product/', include('apps.products.urls')),
-
+        path('blog/', include('apps.blogs.urls')),
+        path('order/', include('apps.cart.urls')),
+        path('booking/', include('apps.booking.urls')),
 
     ])),
 ]

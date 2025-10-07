@@ -19,19 +19,19 @@ class Category(models.Model):
 
 
 class Feature(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
+    package = models.ForeignKey("Package", on_delete=models.CASCADE, related_name="features")
+    name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.package.name})"
 
 
 class Package(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     price = models.IntegerField()
     images = models.JSONField(null=True, blank=True)
     description = models.TextField()
-    features = models.ManyToManyField(Feature, related_name="packages") 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -41,6 +41,7 @@ class Package(models.Model):
 
     def __str__(self):
         return self.name
+
 
 
 class Shop(models.Model):

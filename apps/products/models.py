@@ -3,6 +3,8 @@ from django.utils import timezone
 import random
 from datetime import timedelta
 from django.conf import settings
+from apps.auths.models import CustomUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 class Category(models.Model):
@@ -57,3 +59,24 @@ class Shop(models.Model):
 
     def __str__(self):
         return self.name
+    
+    
+class Review(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reviews")
+    shop = models.ForeignKey("Shop", on_delete=models.CASCADE, null=True, blank=True, related_name="reviews")
+    package = models.ForeignKey("Package", on_delete=models.CASCADE, null=True, blank=True, related_name="reviews")
+
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Review"
+        verbose_name_plural = "Reviews"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        target = self.shop.name if self.shop else self.package.name if self.package else "Unknown"
+        return f"{self.user} - {target} ({self.rating}★)"

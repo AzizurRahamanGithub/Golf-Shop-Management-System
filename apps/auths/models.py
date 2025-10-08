@@ -82,3 +82,10 @@ class ContactMessage (models.Model):
     
     def __str__(self):
         return f"{self.full_name}-{self.subject}"
+    
+class HelpUsImprove(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="improving") 
+    improve_message= models.TextField()
+    
+    def __str__(self):
+        return f"{self.user.full_name}-{self.improve_message}"

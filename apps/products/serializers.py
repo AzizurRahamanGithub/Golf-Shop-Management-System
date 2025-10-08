@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Category, Feature, Package, Shop
+from .models import Category, Feature, Package, Shop, Review
+from django.db.models import Avg, Count
+from apps.booking.models import Booking
+from django.db.models import Q
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -18,6 +21,8 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 class PackageSerializer(serializers.ModelSerializer):
     features = FeatureSerializer(many=True)
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Package
@@ -30,16 +35,17 @@ class PackageSerializer(serializers.ModelSerializer):
             "features",
             "created_at",
             "updated_at",
+            "average_rating",
+            "reviews_count",
         ]
-        
-        read_only_fields= ['id', 'updated_at', "created_at"]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
-    def create(self, validated_data):
-        features_data = validated_data.pop("features", [])
-        package = Package.objects.create(**validated_data)
-        for feature in features_data:
-            Feature.objects.create(package=package, **feature)
-        return package
+    def get_average_rating(self, obj):
+        return obj.reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
+
 
 
 
@@ -48,9 +54,83 @@ class ShopSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(
         write_only=True, queryset=Category.objects.all(), source="category"
     )
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Shop
-        fields = ["id", "name", "description", "category", "category_id", "is_active", "price", "publish_date", "images", "created_at", "updated_at"]
-        
-        read_only_fields= ['id', 'created_at', "category_id", 'updated_at', "created_at"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "category",
+            "category_id",
+            "is_active",
+            "price",
+            "publish_date",
+            "images",
+            "created_at",
+            "updated_at",
+            "average_rating",
+            "reviews_count",
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_average_rating(self, obj):
+        return obj.reviews.aggregate(avg=Avg("rating"))["avg"] or 0
+
+    def get_reviews_count(self, obj):
+        return obj.reviews.count()
+    
+    
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    can_review = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = [
+            "id",
+            "user",
+            "shop",
+            "package",
+            "rating",
+            "comment",
+            "created_at",
+            "can_review",
+        ]
+        read_only_fields = ["user", "created_at", "can_review"]
+
+    def validate(self, data):
+        user = self.context["request"].user
+
+        # Ensure at least one of shop/package exists
+        if not data.get("shop") and not data.get("package"):
+            raise serializers.ValidationError("Either shop or package must be provided.")
+
+        # Prevent multiple reviews by the same user for same target
+        if data.get("shop") and Review.objects.filter(user=user, shop=data["shop"]).exists():
+            raise serializers.ValidationError("You have already reviewed this shop.")
+        if data.get("package") and Review.objects.filter(user=user, package=data["package"]).exists():
+            raise serializers.ValidationError("You have already reviewed this package.")
+
+        return data
+
+    def get_can_review(self, obj):
+        user = self.context["request"].user
+
+        # Get all completed bookings for the user
+        bookings = Booking.objects.filter(user=user, booking_status="complete")
+
+        # Check if this product (shop/package) exists in any booking
+        for booking in bookings:
+            if obj.shop and obj.shop.id in booking.shops:
+                return True
+            if obj.package and obj.package.id in booking.packages:
+                return True
+        return False
+
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)

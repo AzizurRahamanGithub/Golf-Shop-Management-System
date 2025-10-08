@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from .models import Booking
-from .serializers import  BookingSerializer
+from .serializers import  BookingSerializer, BookingHistorySerializer
 from apps.core.response import failure_response, success_response
 from apps.cart.models import Cart
 
@@ -122,6 +122,27 @@ class BookingDetailView(APIView):
             logger.error(f"Booking detail error: {str(e)}")
             return failure_response(
                 "An error occurred while retrieving the booking.",
+                str(e),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )            
+            
+            
+class BookingHistoryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
+            serializer = BookingHistorySerializer(bookings, many=True, context={'request': request})
+            return success_response(
+                "Booking history retrieved successfully.",
+                serializer.data,
+                status.HTTP_200_OK
+            )
+        except Exception as e:
+            logger.error(f"Booking history error: {str(e)}")
+            return failure_response(
+                "An error occurred while fetching booking history.",
                 str(e),
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             )            

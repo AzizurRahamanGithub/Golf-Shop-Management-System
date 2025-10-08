@@ -1,12 +1,20 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
+from django.urls import path, include
 from .views import (
      LoginView, ProtectedView,
-    LogoutView, GetNewAccessTokenView, ForgotPasswordView, PasswordChangeView, ResetPasswordView, ProfileView,  GoogleOauth, ResendVerificationEmailAPIView, DetailSingleProfile
+    LogoutView, GetNewAccessTokenView, ForgotPasswordView, PasswordChangeView, ResetPasswordView, ProfileView,  GoogleOauth, ResendVerificationEmailAPIView, DetailSingleProfile, AdminUserView
 )
-from .views import   ResendOTPAPIView, UserAPIView, UserDetailAPIView, RegisterAPIView,ContactMessageView
+from .views import   ResendOTPAPIView, UserAPIView, UserDetailAPIView, RegisterAPIView,ContactMessageView, HelpUsImproveView
+
+router = DefaultRouter()
+router.register(r'help-us-improve', HelpUsImproveView, basename='improving'),
+router.register(r'admin/users', AdminUserView, basename='user')
+
 
 
 urlpatterns = [
+     path('', include(router.urls)),
+     
      # --- register
     path("register/", RegisterAPIView.as_view(), name="register"),
     path("resend-otp/", ResendOTPAPIView.as_view(), name="resend-otp"),     

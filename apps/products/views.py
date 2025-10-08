@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from apps.core.response import failure_response, success_response
 from rest_framework import status
+from rest_framework import permissions, status
+from rest_framework.views import APIView
 
 # Create your views here.
 from apps.core.crud import DynamicModelViewSet
@@ -73,6 +75,96 @@ class ShopViewSet(DynamicModelViewSet):
         kwargs['model'] = Shop
         kwargs['serializer_class'] = ShopSerializer
         kwargs['item_name'] = 'Shop'
-        super().__init__(*args, **kwargs)       
+        super().__init__(*args, **kwargs)   
         
-                         
+        
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class ReviewView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Create a new review for a shop or package.
+        """
+        try:
+            serializer = ReviewSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(user=request.user)
+                return success_response(
+                    "Review submitted successfully.",
+                    serializer.data,
+                    status.HTTP_201_CREATED
+                )
+
+            return failure_response(
+                "Invalid data.",
+                serializer.errors,
+                status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+            logger.error(f"Review creation error: {str(e)}")
+            return failure_response(
+                "An error occurred while submitting review.",
+                str(e),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+    def get(self, request):
+        """
+        Retrieve all reviews submitted by the logged-in user
+        """
+        try:
+            user = request.user
+            reviews = Review.objects.filter(user=user).order_by('-created_at')
+            serializer = ReviewSerializer(reviews, many=True, context={'request': request})
+            
+            return success_response(
+                "User reviews retrieved successfully.",  # message
+                serializer.data,                        # data
+                status.HTTP_200_OK                       # status code
+            )
+        except Exception as e:
+            logger.error(f"User reviews retrieval error: {str(e)}")
+            return failure_response(
+                "An error occurred while fetching your reviews.",  # message
+                str(e),                                           # data / error
+                status.HTTP_500_INTERNAL_SERVER_ERROR            # status code
+            )
+
+
+class ReviewListView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, product_type, product_id):
+        """
+        List reviews for a specific shop or package
+        """
+        try:
+            if product_type == "shop":
+                reviews = Review.objects.filter(shop_id=product_id)
+            elif product_type == "package":
+                reviews = Review.objects.filter(package_id=product_id)
+            else:
+                return failure_response(
+                     "Invalid product type.",
+                     {}
+                )
+
+            serializer = ReviewSerializer(reviews, many=True, context={'request': request})
+            return success_response(
+                 "Reviews retrieved successfully.",
+                 serializer.data
+            )
+
+        except Exception as e:
+            logger.error(f"Booking history error: {str(e)}")
+            return failure_response(
+                "An error occurred while fetching booking history.",
+                str(e),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )      

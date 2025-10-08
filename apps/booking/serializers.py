@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Booking
 from apps.cart.models import Cart
+from apps.products.models import Shop,Package
+from apps.products.serializers import ShopSerializer, PackageSerializer
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,40 +13,51 @@ class BookingSerializer(serializers.ModelSerializer):
     def validate(self, data):
         cart = self.context.get('cart')
         if not cart:
-            if 'request' not in self.context:
-                raise serializers.ValidationError("Request context is missing.")
-            
             user = self.context['request'].user
             cart = Cart.objects.filter(user=user).order_by('-created_at').first()
-        
+
         if not cart:
             raise serializers.ValidationError("Cart does not exist.")
-
         if not cart.items.exists():
             raise serializers.ValidationError("Cart is empty.")
 
         total_price = 0
-        shops = []
-        packages = []
+        shop_ids = []
+        package_ids = []
 
-        # Iterate over the cart items
         for item in cart.items.all():
             total_price += item.total_price()
-
-            # Collect all shops and packages
             if item.shop:
-                shops.append(item.shop)
+                shop_ids.append(item.shop.id)
             if item.package:
-                packages.append(item.package)
+                package_ids.append(item.package.id)
 
-        # Decide which shop/package to associate with booking
-        # Option 1: Use the first one found
-        data['shop'] = shops[0] if shops else None
-        data['package'] = packages[0] if packages else None
-
-        data['total_price'] = total_price
+        data["shops"] = shop_ids
+        data["packages"] = package_ids
+        data["shop"] = Shop.objects.filter(id=shop_ids[0]).first() if shop_ids else None
+        data["package"] = Package.objects.filter(id=package_ids[0]).first() if package_ids else None
+        data["total_price"] = total_price
 
         return data
 
     def create(self, validated_data):
         return super().create(validated_data)
+
+
+class BookingHistorySerializer(serializers.ModelSerializer):
+    shops = serializers.SerializerMethodField()
+    packages = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Booking
+        fields = ["shops", "packages"]
+
+    def get_shops(self, obj):
+        shop_ids = obj.shops or []
+        shops = Shop.objects.filter(id__in=shop_ids)
+        return ShopSerializer(shops, many=True).data
+
+    def get_packages(self, obj):
+        package_ids = obj.packages or []
+        packages = Package.objects.filter(id__in=package_ids)
+        return PackageSerializer(packages, many=True).data

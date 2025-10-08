@@ -1,6 +1,6 @@
 from django.db.models import Avg, Count
 from datetime import datetime, timedelta
-from .models import CustomUser, ContactMessage
+from .models import CustomUser, ContactMessage, HelpUsImprove
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -171,3 +171,33 @@ class ContactMessageSerializer(serializers.ModelSerializer):
         model = ContactMessage
         fields = ["id", "full_name", "email", "subject", "message", "created_at"]
         read_only_fields = ["id", "created_at"]
+ 
+        
+class HelpUsImproveSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = HelpUsImprove
+        fields = ["id", "user", "improve_message"]
+        read_only_fields = ["user"]        
+        
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id", "email", "username", "password", "full_name",
+            "role", "is_active", "address", "phone_number", "photo"
+        ]
+        read_only_fields = ["id", "created_at"]
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        user.save()
+        return user        

@@ -20,11 +20,11 @@ from rest_framework.generics import RetrieveUpdateAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import UserProfile
+from .models import UserProfile, HelpUsImprove, CustomUser
 from rest_framework import viewsets, permissions
 from .serializers import (
     UserRegisterSerializer, LoginSerializer, UserSerializer,
-    ForgotPasswordSerializer, ResetPasswordSerializer, PasswordChangeSerializer, CustomUserAllSerializer, ContactMessageSerializer
+    ForgotPasswordSerializer, ResetPasswordSerializer, PasswordChangeSerializer, CustomUserAllSerializer, ContactMessageSerializer, HelpUsImproveSerializer, AdminUserSerializer
 )
 from .tokens import email_activation_token
 from rest_framework.authentication import TokenAuthentication
@@ -36,6 +36,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from ..core.crud import DynamicModelViewSet
 
 
 BASE_URL = os.getenv('BASE_URL')
@@ -59,7 +60,6 @@ class RegisterAPIView(APIView):
         
         except Exception as e:
             return failure_response("An error occurred", error= str(e), status_code= status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 class DetailSingleProfile(RetrieveAPIView):
@@ -123,7 +123,6 @@ class UserAPIView(APIView):
             return failure_response("An error occurred while creating user", str(e))
 
 
-# Single User Detail View
 class UserDetailAPIView(APIView):
   
     permission_classes=[IsAuthenticated]
@@ -163,7 +162,6 @@ class UserDetailAPIView(APIView):
             return failure_response("User not found", status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return failure_response("An error occurred while deleting user", str(e))
-
 
 
 class VerifyOTPAPIView(APIView):
@@ -409,6 +407,7 @@ class PasswordChangeView(APIView):
 
         return success_response({"message": "Password changed successfully"}, status.HTTP_200_OK)
 
+
 class ForgotPasswordView(APIView):
     """
     Send password reset link to user's email
@@ -453,7 +452,6 @@ class ForgotPasswordView(APIView):
         )
 
 
-
 class ResetPasswordView(APIView):
     def post(self, request, uidb64, token):
         serializer = ResetPasswordSerializer(data=request.data)
@@ -477,7 +475,6 @@ class CustomPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
-
 
 
 class AllUsers(viewsets.ModelViewSet):
@@ -639,12 +636,11 @@ class GoogleOauth(APIView):
             })
 
 
-
 class ContactMessageView(APIView):
     def post(self, request):
         serializer = ContactMessageSerializer(data=request.data)
-        DEFAULT_FROM_EMAIL = "noreply@yourdomain.com"
-        CONTACT_EMAIL = "aboutazizur@gmail.com"
+        DEFAULT_FROM_EMAIL = "ashrafulsifat26@gmail.com"
+        CONTACT_EMAIL = "ashrafulsifat26@gmail.com"
 
         if serializer.is_valid():
             contact_message = serializer.save()
@@ -670,3 +666,25 @@ class ContactMessageView(APIView):
             )
         return failure_response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    
+class HelpUsImproveView(DynamicModelViewSet):
+    queryset = HelpUsImprove.objects.all()
+    serializer_class = HelpUsImproveSerializer
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self, *args, **kwargs):
+        kwargs['model'] = HelpUsImprove
+        kwargs['serializer_class'] = HelpUsImproveSerializer
+        kwargs['item_name'] = 'HelpUsImprove'
+        super().__init__(*args, **kwargs)
+        
+class AdminUserView(DynamicModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = AdminUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self, *args, **kwargs):
+        kwargs['model'] = CustomUser
+        kwargs['serializer_class'] = AdminUserSerializer
+        kwargs['item_name'] = 'CustomUser'
+        super().__init__(*args, **kwargs)

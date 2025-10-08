@@ -6,12 +6,19 @@ from apps.cart.models import Cart
 
 
 class Booking(models.Model):
+    
+    STATUS_CHOICES=[
+            ('progress', 'Progress'),
+            ('complete', 'Complete')
+        ]
+    
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="bookings")
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     start_time = models.TimeField()
     end_time = models.TimeField()
-
+    
+    booking_status= models.CharField(max_length=12, choices=STATUS_CHOICES, default='progress')
     number_of_guests = models.PositiveIntegerField()
     shop_type = models.CharField(max_length=100)
 
@@ -25,8 +32,18 @@ class Booking(models.Model):
 
     package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    shops = models.JSONField(default=list, blank=True)
+    packages = models.JSONField(default=list, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     damage_waiver = models.BooleanField(default=False)
+    
+    signature= models.CharField(max_length=300, blank=True, null=True)
+    print_name= models.CharField(max_length=300, blank=True, null=True)
+    date= models.DateField(blank=True ,null=True)
+    signature_image= models.CharField(max_length=300, blank=True, null=True)
+    
+    payment_id= models.CharField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

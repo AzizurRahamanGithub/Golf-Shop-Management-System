@@ -4,6 +4,9 @@ from ..core.crud import DynamicModelViewSet
 from ..core.pagination import CustomPagination
 from ..core.permissions import IsAdminRole
 from ..core.publicApi import BasePublicAPIView
+from django.conf import settings
+import stripe
+
 
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -19,44 +22,73 @@ import logging
 
 # Set up logging for error handling
 logger = logging.getLogger(__name__)
+stripe.api_key = settings.STRIPE_SECRET_KEY  
+
 
 class BookingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
-            # Get the user's most recent cart or the only active cart
             cart = Cart.objects.filter(user=request.user).order_by('-created_at').first()
-            
             if not cart:
-                return failure_response(
-                    "Cart does not exist.",
-                    {},
-                    status.HTTP_400_BAD_REQUEST
-                )
+                return failure_response("Cart does not exist.", {}, status.HTTP_400_BAD_REQUEST)
 
             if not cart.items.exists():
-                return failure_response(
-                    "Cart is empty.",
-                    {},
-                    status.HTTP_400_BAD_REQUEST
+                return failure_response("Cart is empty.", {}, status.HTTP_400_BAD_REQUEST)
+
+            pm_id = request.data.get("pm_id")
+            if not pm_id:
+                return failure_response("Payment method ID (pm_id) is required.", {}, status.HTTP_400_BAD_REQUEST)
+
+            # Calculate total amount from cart
+            total_price = sum(item.total_price() for item in cart.items.all())
+            amount = int(total_price * 100)  # Stripe uses cents
+
+            # ✅ Create and confirm payment intent
+            try:
+                intent = stripe.PaymentIntent.create(
+                    amount=amount,
+                    currency="usd",
+                    payment_method=pm_id,
+                    payment_method_types=["card"],  # only cards
+                    confirmation_method="manual",
+                    confirm=True,
                 )
 
-            # Initialize serializer with context
+
+            except stripe.StripeError as e:
+                logger.error(f"Stripe API error: {str(e)}")
+                return failure_response(f"Payment error: {e.user_message if hasattr(e, 'user_message') else str(e)}", {}, status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                logger.error(f"Unexpected error with Stripe: {str(e)}")
+                return failure_response("Unexpected payment error occurred.", str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            # ✅ Check payment status
+            if intent.status not in ["succeeded", "requires_capture"]:
+                return failure_response(
+                    f"Payment not completed. Status: {intent.status}",
+                    {"status": intent.status},
+                    status.HTTP_400_BAD_REQUEST,
+                )
+
+            # ✅ Create booking record
             serializer = BookingSerializer(
-                data=request.data, 
-                context={'request': request, 'cart': cart}  # Pass cart to context
+                data=request.data,
+                context={'request': request, 'cart': cart}
             )
 
             if serializer.is_valid():
-                # Save the booking
-                booking = serializer.save(user=request.user)
+                booking = serializer.save(
+                    user=request.user,
+                    payment_id=intent.id  # store Stripe PaymentIntent ID
+                )
 
-                # Clear the cart after successful booking
+                # clear cart items after successful booking
                 cart.items.all().delete()
 
                 return success_response(
-                    "Booking created successfully.",
+                    "Booking created successfully and payment completed.",
                     serializer.data,
                     status.HTTP_201_CREATED
                 )
@@ -70,10 +102,12 @@ class BookingView(APIView):
         except Exception as e:
             logger.error(f"Booking creation error: {str(e)}")
             return failure_response(
-                "An unexpected error occurred. Please try again later.",
+                "An unexpected error occurred.",
                 str(e),
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+            
+            
             
     def get(self, request):
         try:

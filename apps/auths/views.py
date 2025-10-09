@@ -53,13 +53,13 @@ class RegisterAPIView(APIView):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return success_response("User Registered successfully", data= serializer.data, status_code=status.HTTP_201_CREATED)
+            return success_response("User Registered successfully", data= serializer.data, status=status.HTTP_201_CREATED)
         
         except ValidationError as e:
             return failure_response("Validation Error", error=e.detail)
         
         except Exception as e:
-            return failure_response("An error occurred", error= str(e), status_code= status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return failure_response("An error occurred", error= str(e), status= status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DetailSingleProfile(RetrieveAPIView):
@@ -333,7 +333,7 @@ class ProtectedView(APIView):
         return success_response(
             message="You have access!",
             data={},
-            status_code=status.HTTP_200_OK
+            status=status.HTTP_200_OK
         )
 
 
@@ -417,7 +417,7 @@ class ForgotPasswordView(APIView):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email = serializer.validated_data["email"]
+        email = serializer.validated_data["email"]  
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -431,7 +431,7 @@ class ForgotPasswordView(APIView):
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
         # Build password reset URL
-        reset_url = f"{request.scheme}://{request.get_host()}/api/v1/auth//reset-password/{uid}/{token}/"
+        reset_url = f"{request.scheme}://{request.get_host()}/api/v1/auth/reset-password/{uid}/{token}/"
          
         # Send email
         subject = "Password Reset Request"
@@ -639,8 +639,8 @@ class GoogleOauth(APIView):
 class ContactMessageView(APIView):
     def post(self, request):
         serializer = ContactMessageSerializer(data=request.data)
-        DEFAULT_FROM_EMAIL = "ashrafulsifat26@gmail.com"
-        CONTACT_EMAIL = "ashrafulsifat26@gmail.com"
+        DEFAULT_FROM_EMAIL = "officeazizur@gmail.com"
+        CONTACT_EMAIL = "officeazizur@gmail.com"
 
         if serializer.is_valid():
             contact_message = serializer.save()

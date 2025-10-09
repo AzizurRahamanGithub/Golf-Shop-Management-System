@@ -43,7 +43,7 @@ class Booking(models.Model):
     date= models.DateField(blank=True ,null=True)
     signature_image= models.CharField(max_length=300, blank=True, null=True)
     
-    payment_id= models.CharField(blank=True, null=True)
+    payment_id= models.CharField(max_length= 300 , blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

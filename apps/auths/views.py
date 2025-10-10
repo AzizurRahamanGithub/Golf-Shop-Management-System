@@ -38,6 +38,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from ..core.crud import DynamicModelViewSet
 
+from apps.notification.utils import create_notification
+
 
 BASE_URL = os.getenv('BASE_URL')
 User = get_user_model()
@@ -53,6 +55,13 @@ class RegisterAPIView(APIView):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            
+            create_notification(
+                    user=request.user,
+                    title="New User Registered",
+                    message=f"Payment of ${payment.amount} received via Stripe."
+                )
+            
             return success_response("User Registered successfully", data= serializer.data, status=status.HTTP_201_CREATED)
         
         except ValidationError as e:

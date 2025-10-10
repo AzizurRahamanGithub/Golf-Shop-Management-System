@@ -45,13 +45,13 @@ class BookingView(APIView):
             total_price = sum(item.total_price() for item in cart.items.all())
             amount = int(total_price * 100)  # Stripe uses cents
 
-            # ✅ Create and confirm payment intent
+            # Create and confirm payment intent
             try:
                 intent = stripe.PaymentIntent.create(
                     amount=amount,
                     currency="usd",
                     payment_method=pm_id,
-                    payment_method_types=["card"],  # only cards
+                    payment_method_types=["card"],  
                     confirmation_method="manual",
                     confirm=True,
                 )

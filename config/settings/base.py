@@ -3,6 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 from datetime import timedelta
+from apps.custom_admin.custom_admin import *
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -10,8 +11,18 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = False
 ALLOWED_HOSTS = []
 
+
+
+
 # Application definition
 INSTALLED_APPS = [
+    # "unfold",  # Must be before django.contrib.admin
+    # "unfold.contrib.filters",  # Optional filters
+    # "unfold.contrib.forms",  # Optional form widgets
+    # "unfold.contrib.import_export",  # Optional import/export
+    # "unfold.contrib.guardian",  # Optional permissions
+    # "unfold.contrib.simple_history",  # Optional history
+    
     # Django core apps
     'django.contrib.admin',
     'django.contrib.auth',
@@ -23,16 +34,16 @@ INSTALLED_APPS = [
     # Third-party apps (uncomment/add as needed)
     'rest_framework',
     'rest_framework_simplejwt',
-    'django.contrib.sites',  # Required by allauth
+    # 'django.contrib.sites',  # Required by allauth
     'corsheaders',
-    'allauth',
+    # 'allauth',
     'allauth.account',
-    'allauth.socialaccount',
+    # 'allauth.socialaccount',
     'whitenoise.runserver_nostatic',
     # 'django_celery_beat',
     'schema_viewer',
     'django_filters',
-    'django_celery_beat',
+    # 'django_celery_beat',
     "channels",
 
     # Local apps (your custom apps - modify for each project)
@@ -46,7 +57,7 @@ INSTALLED_APPS = [
     'apps.blogs',
     'apps.booking',
     'apps.cart',
-    'apps.coupon'
+    'apps.coupon',
 ]
 
 MIDDLEWARE = [
@@ -55,7 +66,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS handling
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    "django.middleware.csrf.CsrfViewMiddleware",
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -122,7 +133,8 @@ SESSION_COOKIE_AGE = 3600  # 1 hour
 # Static files configuration
 STATIC_URL = '/static/'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
+STATICFILES_DIRS = [BASE_DIR / 'static']  # must be a list or tuple
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # optional but needed for collectstatic
 # Media files configuration
 # Option 1: Local media files (development)
 MEDIA_URL = '/media/'

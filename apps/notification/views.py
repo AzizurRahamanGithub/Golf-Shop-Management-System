@@ -43,12 +43,17 @@ class NotificationListView(generics.ListAPIView):
 
         return Response(paginated_data)
 
-
+    
 class MarkAllNotificationsReadView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def patch(self, request):
         user = request.user
         updated_count = Notification.objects.filter(
             user=user, is_read=False).update(is_read=True)
-        return success_response('Notifications marked as read successfully', {'updated_count': updated_count}, status.HTTP_200_OK)
+        return success_response(
+            'Notifications marked as read successfully',
+            {'updated_count': updated_count},
+            status.HTTP_200_OK
+        )
+    

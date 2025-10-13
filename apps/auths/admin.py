@@ -3,6 +3,9 @@ from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, UserProfile
 from django.utils import timezone
 
+from django.contrib import admin
+
+
 # Custom UserAdmin
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -12,7 +15,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
     fieldsets = (
         (None, {'fields': ('email', 'username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'phone_number', 'address', 'photo')}),
+        ('Personal info', {'fields': ('full_name','first_name', 'last_name', 'role', 'phone_number', 'address', 'photo')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (

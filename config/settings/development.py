@@ -22,6 +22,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://172.252.13.75:6543',  
     'http://172.252.13.75:6724',  
     'http://172.252.13.75:8083',  
+    'https://4fb09c3d5fc0.ngrok-free.app'
     
 ]
 
@@ -36,6 +37,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://172.252.13.75:6543',  
     'http://172.252.13.75:6724',  
     'http://172.252.13.75:8083',  
+    'https://4fb09c3d5fc0.ngrok-free.app',
 ]
 
 

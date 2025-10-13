@@ -34,6 +34,8 @@ class Package(models.Model):
     price = models.IntegerField()
     images = models.JSONField(null=True, blank=True)
     description = models.TextField()
+    stock = models.PositiveIntegerField(default=0)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -54,6 +56,8 @@ class Shop(models.Model):
     price = models.IntegerField()
     publish_date = models.DateField()
     images = models.JSONField(null=True, blank=True)
+    stock = models.PositiveIntegerField(default=0)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

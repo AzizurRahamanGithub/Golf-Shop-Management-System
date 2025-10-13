@@ -38,7 +38,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from ..core.crud import DynamicModelViewSet
 
-from apps.notification.utils import create_notification
+from apps.notification.utils import notify_admins
 
 
 BASE_URL = os.getenv('BASE_URL')
@@ -50,17 +50,17 @@ class RegisterAPIView(APIView):
     authentication_classes= []
     
     def post(self, request):
-        serializer=  UserRegisterSerializer(data= request.data)
         
         try:
+            serializer = UserRegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            user = serializer.save()
             
-            create_notification(
-                    user=request.user,
-                    title="New User Registered",
-                    message=f"Payment of ${payment.amount} received via Stripe."
-                )
+            # Notify admins only
+            notify_admins(
+                title="New User Registered",
+                message=f"{user.full_name or user.username} just signed up."
+            )
             
             return success_response("User Registered successfully", data= serializer.data, status=status.HTTP_201_CREATED)
         

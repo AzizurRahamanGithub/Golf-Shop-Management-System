@@ -7,7 +7,9 @@ import random
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from import_export.admin import ImportExportActionModelAdmin
 now = timezone.now()
+from django.contrib import admin
 
 
 class Role(models.TextChoices):
@@ -44,6 +46,10 @@ class CustomUser(AbstractUser):
             models.Index(fields=['created_at'], name='created_at_idx'),
         ]
 
+
+class CustomUserAdmin(ImportExportActionModelAdmin):
+    list_display = ('username', 'email', 'role', 'is_active', 'created_at')
+    search_fields = ('username', 'email', 'full_name')
 
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)

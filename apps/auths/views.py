@@ -45,6 +45,7 @@ BASE_URL = os.getenv('BASE_URL')
 User = get_user_model()
 
 
+
 class RegisterAPIView(APIView):
     permission_classes= [AllowAny]
     authentication_classes= []

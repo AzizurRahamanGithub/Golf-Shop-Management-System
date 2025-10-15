@@ -7,3 +7,15 @@ img:hover {
     transform: scale(1.05);
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
+
+
+
+/* ---------- Input Fields ---------- */
+input, select, textarea {
+    border: 1.5px solid #d1d5db; /* soft gray border */
+    border-radius: 6px;
+    transition: all 0.25s ease-in-out;
+    padding: 8px 10px;
+    color: #1f2937;
+}
+

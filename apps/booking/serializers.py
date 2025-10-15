@@ -22,8 +22,8 @@ class BookingSerializer(serializers.ModelSerializer):
             "shop",
             "package",
             "total_price",
-            "final_total",
             "discount_amount",
+            "final_total",
             "tax",
         ]
 
@@ -56,12 +56,13 @@ class BookingSerializer(serializers.ModelSerializer):
             try:
                 coupon = Coupon.objects.get(code__iexact=coupon_code, is_active=True)
             except Coupon.DoesNotExist:
-                raise serializers.ValidationError("Invalid coupon code.")
+                raise serializers.ValidationError({"coupon_code": "Invalid coupon code."})
 
             if coupon.is_expired():
-                raise serializers.ValidationError("This coupon has expired.")
+                raise serializers.ValidationError({"coupon_code": "This coupon has expired."})
             if coupon.remaining_uses() <= 0:
-                raise serializers.ValidationError("Coupon usage limit reached.")
+                raise serializers.ValidationError({"coupon_code": "Coupon usage limit reached."})
+
 
             # Apply discount based on type
             if coupon.discount_type == 'percentage':

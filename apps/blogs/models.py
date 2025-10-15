@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Blog(models.Model):
     STATUS_CHOICES = [
         ('published', 'Published'),

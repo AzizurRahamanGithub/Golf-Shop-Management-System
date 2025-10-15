@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% load static unfold %}
+
+{% block content %}
+<div class="dashboard-metrics" style="display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="flex:1; background: linear-gradient(90deg,#4ade80,#16a34a); padding:20px; border-radius:12px; color:white;">
+        <h3>Total Bookings</h3>
+        <p style="font-size:1.8rem; font-weight:bold;">{{ total_bookings }}</p>
+    </div>
+    <div style="flex:1; background: linear-gradient(90deg,#60a5fa,#1e3a8a); padding:20px; border-radius:12px; color:white;">
+        <h3>Total Users</h3>
+        <p style="font-size:1.8rem; font-weight:bold;">{{ total_users }}</p>
+    </div>
+    <div style="flex:1; background: linear-gradient(90deg,#facc15,#b45309); padding:20px; border-radius:12px; color:white;">
+        <h3>Total Earning</h3>
+        <p style="font-size:1.8rem; font-weight:bold;">${{ total_earning }}</p>
+    </div>
+    <div style="flex:1; background: linear-gradient(90deg,#f472b6,#be185d); padding:20px; border-radius:12px; color:white;">
+        <h3>Total Rentals</h3>
+        <p style="font-size:1.8rem; font-weight:bold;">{{ total_rental }}</p>
+    </div>
+</div>
+{% endblock %}

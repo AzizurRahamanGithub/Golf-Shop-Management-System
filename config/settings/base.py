@@ -21,17 +21,9 @@ SUMMERNOTE_CONFIG = {
         ['color', ['color']],
         ['para', ['ul', 'ol', 'paragraph']],
         ['table', ['table']],
-        ['insert', ['link', 'picture', 'video']],
+        ['insert', ['link']],
         ['view', ['fullscreen', 'codeview']],
     ],
-}
-
-
-ADMIN_INTERFACE = {
-    "default_theme": {
-        "logo": "images/my_logo.png",
-        "favicon": "images/favicon.ico",
-    }
 }
 
 
@@ -108,7 +100,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
+        'DIRS': [BASE_DIR / "apps/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -116,7 +108,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'apps.custom_home.context_processors.dashboard_metrics', 
             ],
         },
     },

@@ -9,11 +9,11 @@ UNFOLD = {
     "SITE_HEADER": "Administration",
     "SITE_URL": "https://yaribabieex3-frontend.vercel.app/",
     "SITE_SYMBOL": "admin_panel_settings",
-    "LOGO": lambda request: static("images/my_logo.png"),
+    "LOGO": lambda request: static("images/logo.png"),
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_SITE_HEADER": True,
-
+    
     "FORMS": {
     "INLINE_ACTIONS": True,
 },
@@ -35,7 +35,7 @@ UNFOLD = {
         "ENABLE_BULK_DELETE": True,
     },
 
-    "ENVIRONMENT": "development",
+    "ENVIRONMENT": "Development",
 
     "LOGIN": {
         "redirect_after": lambda request: "/admin/",

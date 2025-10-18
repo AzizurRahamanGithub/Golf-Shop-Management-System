@@ -1,26 +1,20 @@
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('Custom admin JS loaded 😎');
-  // Example: Animate sidebar items on hover
-  document.querySelectorAll('.sidebar a').forEach(link => {
-    link.addEventListener('mouseenter', () => {
-      link.style.transform = 'translateX(5px)';
-    });
-    link.addEventListener('mouseleave', () => {
-      link.style.transform = 'translateX(0)';
-    });
-  });
-});
 
+document.addEventListener("DOMContentLoaded", () => {
+  const badge = document.querySelector(".notification-badge");
 
-
-document.querySelectorAll('.field-with-actions').forEach(field => {
-    field.style.display = 'flex';
-    field.style.alignItems = 'center';
-    field.style.gap = '0.5rem';
-});
-
-
-// static/js/custom_admin.js
-window.addEventListener('DOMContentLoaded', function() {
-    console.log('[custom_admin.js] Connected ✅ — UNFOLD JS loaded');
+  if (badge) {
+    setInterval(() => {
+      fetch("/admin/notifications/unread-count/")
+        .then(res => res.json())
+        .then(data => {
+          if (data.unread_count > 0) {
+            badge.textContent = data.unread_count;
+            badge.style.display = "inline";
+          } else {
+            badge.style.display = "none";
+          }
+        })
+        .catch(err => console.error("Notification fetch error:", err));
+    }, 10000); // every 10 seconds
+  }
 });

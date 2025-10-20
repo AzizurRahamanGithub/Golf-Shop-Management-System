@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Category, Feature, Package, Shop, Review
-
+from .forms import SingleImageForm, MultipleImagesForm
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -23,6 +23,15 @@ class FeatureInline(admin.TabularInline):
 
 @admin.register(Package)
 class PackageAdmin(admin.ModelAdmin):
+    # Use multiple images form
+    form = type(
+        'PackageMultipleImagesForm',
+        (MultipleImagesForm,),
+        {
+            'Meta': type('Meta', (MultipleImagesForm.Meta,), {'model': Package}),
+            'image_folder': 'packages'
+        }
+    )
     list_display = ("name", "price", "stock", "created_at", "updated_at")
     list_filter = ("created_at", "updated_at")
     search_fields = ("name", "description")
@@ -40,6 +49,15 @@ class PackageAdmin(admin.ModelAdmin):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
+    # Use multiple images form
+    form = type(
+        'PackageMultipleImagesForm',
+        (MultipleImagesForm,),
+        {
+            'Meta': type('Meta', (MultipleImagesForm.Meta,), {'model': Package}),
+            'image_folder': 'packages'
+        }
+    )
     list_display = ("name", "category", "price", "is_active", "publish_date", "stock")
     list_filter = ("is_active", "category", "publish_date")
     search_fields = ("name", "description")

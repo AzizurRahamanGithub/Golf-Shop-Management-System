@@ -18,13 +18,13 @@ UNFOLD = {
     "INLINE_ACTIONS": True,
 },
       "SITE_ICON": {
-        "light": lambda request: static("images/logo.png"),  # light mode
-        "dark": lambda request: static("images/logo.png"),  # dark mode
+        "light": lambda request: static("images/yaribabi.png"),  # light mode
+        "dark": lambda request: static("images/yaribabi.png"),  # dark mode
     },
     # "SITE_LOGO": lambda request: static("logo.svg"),  # both modes, optimise for 32px height
     "SITE_LOGO": {
-        "light": lambda request: static("images/logo.png"),  # light mode
-        "dark": lambda request: static("images/logo.png"),  # dark mode
+        "light": lambda request: static("images/yaribabi.png"),  # light mode
+        "dark": lambda request: static("images/yaribabi.png"),  # dark mode
     },
    
     "THEME": "light",

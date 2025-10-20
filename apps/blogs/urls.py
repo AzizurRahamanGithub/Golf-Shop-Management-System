@@ -7,4 +7,6 @@ router.register(r'public', BlogViewSet, basename='blog')
 
 urlpatterns = [
     path('', include(router.urls)),
+     path('random/blogs/', RandomBlogListView.as_view(), name='random-blogs'),
+     path('blogs/', BlogListView.as_view(), name='blogs'),
 ]

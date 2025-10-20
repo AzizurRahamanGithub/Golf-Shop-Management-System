@@ -2,11 +2,11 @@ from django.contrib import admin
 from django_summernote.admin import SummernoteModelAdmin
 from django.utils.html import format_html
 from .models import Blog
-from .forms import BlogAdminForm
+from .forms import UploadAdminForm
 
 @admin.register(Blog)
 class BlogAdmin(SummernoteModelAdmin):
-    form = BlogAdminForm
+    form = UploadAdminForm
     list_display = ("title","colored_status", "created_at")
     list_filter = ("blog_status", "created_at")
     search_fields = ("title", "description")

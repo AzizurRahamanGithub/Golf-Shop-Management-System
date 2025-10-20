@@ -8,9 +8,40 @@ from apps.core.response import failure_response, success_response
 from rest_framework import status
 from rest_framework import permissions, status
 from rest_framework.views import APIView
+import random
+from rest_framework import generics
 
 # Create your views here.
 from apps.core.crud import DynamicModelViewSet
+
+# 1️⃣ Random available shops API
+class RandomShopListView(APIView):
+    def get(self, request):
+        shops = Shop.objects.filter(is_active=True)
+        random_shops = random.sample(list(shops), min(len(shops), 10))
+        serializer = ShopSerializer(random_shops, many=True)
+        return success_response("Shops retrive successfully",serializer.data)
+    
+class RandomPackageListView(APIView):
+    def get(self, request):
+        packages = Package.objects.all()  # can filter is_active if needed
+        random_packages = random.sample(list(packages), min(len(packages), 10))
+        serializer = PackageSerializer(random_packages, many=True)
+        return success_response("Random packages retrieved successfully", serializer.data)    
+
+
+# 2️⃣ Shops by category
+class ShopByCategoryView(generics.ListAPIView):
+    serializer_class = ShopSerializer
+
+    def get_queryset(self):
+        category_id = self.kwargs.get("category_id")
+        return Shop.objects.filter(
+            category_id=category_id,
+            is_active=True,
+            stock__gt=0
+        )
+
 
 class CategoryViewSet(DynamicModelViewSet):
     queryset = Category.objects.all()
@@ -67,15 +98,19 @@ class PackageViewSet(DynamicModelViewSet):
                         
 
 class ShopViewSet(DynamicModelViewSet):
-    queryset = Shop.objects.all()
     serializer_class = ShopSerializer
     permission_classes = [IsAuthenticated]
- 
+
     def __init__(self, *args, **kwargs):
         kwargs['model'] = Shop
         kwargs['serializer_class'] = ShopSerializer
         kwargs['item_name'] = 'Shop'
-        super().__init__(*args, **kwargs)   
+        super().__init__(*args, **kwargs)
+
+    def get_queryset(self):
+        # sudhu active shops return korbe
+        return Shop.objects.filter(is_active=True)
+
         
         
 import logging

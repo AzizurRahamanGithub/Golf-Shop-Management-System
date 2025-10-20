@@ -20,7 +20,7 @@ class MultiFileField(forms.FileField):
         return single_file_clean(data, initial)
 
 
-class BlogAdminForm(forms.ModelForm):
+class UploadAdminForm(forms.ModelForm):
     upload_image = forms.FileField(required=False, help_text="Upload single image")
     delete_image = forms.BooleanField(
         required=False, initial=False, help_text="Check to delete current single image"

@@ -6,10 +6,30 @@ from ..core.permissions import IsAdminRole
 from ..core.publicApi import BasePublicAPIView
 from rest_framework.permissions import IsAuthenticated
 from apps.notification.utils import notify_admins
-   
+from apps.core.response import failure_response, success_response
+import random
+from rest_framework import generics
+from rest_framework.views import APIView
+
+
+class RandomBlogListView(APIView):
+    def get(self, request):
+        # only published blogs
+        blogs = Blog.objects.filter(blog_status='published')
+        random_blogs = random.sample(list(blogs), min(len(blogs), 10))
+        serializer = BlogSerializer(random_blogs, many=True)
+        return success_response("Random blogs retrieved successfully", serializer.data)
+
+class BlogListView(APIView):
+    def get(self, request):
+        # only published blogs
+        blogs = Blog.objects.filter(blog_status='published')
+        serializer = BlogSerializer(blogs, many=True)
+        return success_response("Blogs retrieved successfully", serializer.data)
+
 
 class BlogViewSet(DynamicModelViewSet):
-    queryset = Blog.objects.all()
+    queryset = Blog.objects.filter(blog_status='published')  # only published
     serializer_class = BlogSerializer
     permission_classes = [IsAuthenticated]
 

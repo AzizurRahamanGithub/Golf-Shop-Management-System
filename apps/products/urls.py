@@ -11,7 +11,9 @@ router.register(r'shops', ShopViewSet, basename='shop')
 
 urlpatterns = [
     path('', include(router.urls)),
-    
+    path('random/shops/', RandomShopListView.as_view(), name='random-shops'),
+    path('random/packages/', RandomPackageListView.as_view(), name='random-packages'),
+    path('shops/category/<int:category_id>/', ShopByCategoryView.as_view(), name='shops-by-category'),
      path("reviews/", ReviewView.as_view(), name="review-create"),
      path("reviews/<str:product_type>/<int:product_id>/", ReviewListView.as_view(), name="review-list"),
 ]

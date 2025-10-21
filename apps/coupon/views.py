@@ -35,7 +35,6 @@ class CouponViewSet(DynamicModelViewSet):
     queryset = Coupon.objects.all()
     serializer_class = CouponSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated]
 
     def __init__(self, *args, **kwargs):
         kwargs['model'] = Coupon

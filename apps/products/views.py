@@ -54,7 +54,6 @@ class ShopByCategoryView(generics.ListAPIView):
 class CategoryViewSet(DynamicModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
  
     def __init__(self, *args, **kwargs):
         kwargs['model'] = Category
@@ -77,7 +76,6 @@ class CategoryViewSet(DynamicModelViewSet):
 class PackageViewSet(DynamicModelViewSet):
     queryset = Package.objects.all()
     serializer_class = PackageSerializer
-    permission_classes = [IsAuthenticated]
 
     def __init__(self, *args, **kwargs):
         kwargs['model'] = Package
@@ -107,7 +105,6 @@ class PackageViewSet(DynamicModelViewSet):
 
 class ShopViewSet(DynamicModelViewSet):
     serializer_class = ShopSerializer
-    permission_classes = [IsAuthenticated]
 
     def __init__(self, *args, **kwargs):
         kwargs['model'] = Shop
@@ -127,7 +124,6 @@ logger = logging.getLogger(__name__)
 
 
 class ReviewView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         """

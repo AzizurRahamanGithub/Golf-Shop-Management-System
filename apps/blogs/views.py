@@ -31,7 +31,6 @@ class BlogListView(APIView):
 class BlogViewSet(DynamicModelViewSet):
     queryset = Blog.objects.filter(blog_status='published')  # only published
     serializer_class = BlogSerializer
-    permission_classes = [IsAuthenticated]
 
     def __init__(self, *args, **kwargs):
         kwargs['model'] = Blog

@@ -16,7 +16,6 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 
 class CartView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         try:
@@ -40,7 +39,6 @@ class CartView(APIView):
 
 
 class CartItemView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)

@@ -11,7 +11,6 @@ from rest_framework.response import Response
 
 class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination 
 
     def get_queryset(self):
@@ -45,7 +44,6 @@ class NotificationListView(generics.ListAPIView):
 
     
 class MarkAllNotificationsReadView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def patch(self, request):
         user = request.user

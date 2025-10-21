@@ -34,5 +34,5 @@ python manage.py migrate
 # python manage.py collectstatic --noinput
 
 # runserver
-echo "🚀 Running server on 0.0.0.0:8083"
-python manage.py runserver 0.0.0.0:8083
+echo "🚀 Running server on 0.0.0.0:8471"
+python manage.py runserver 0.0.0.0:8471

@@ -14,6 +14,21 @@ from .models import Coupon
 from .serializers import CouponMultiEmailSerializer, UserEmailSearchSerializer
 from apps.core.response import failure_response, success_response
 
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from rest_framework import status, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.auths.models import CustomUser
+from .models import Coupon, EmailTemplate, CouponEmailLog
+from .serializers import (
+    CouponSerializer, 
+    CouponMultiEmailSerializer, 
+    UserEmailSearchSerializer
+)
+from .email_workers import send_coupons_in_background
+from apps.core.response import failure_response, success_response
 
 
 class CouponViewSet(DynamicModelViewSet):
@@ -36,49 +51,56 @@ class UserSearchView(APIView):
         query = request.GET.get("q", "")
         users = CustomUser.objects.filter(email__icontains=query)[:10]
         serializer = UserEmailSearchSerializer(users, many=True)
-        return success_response("User Retrive Successfully!",serializer.data)
+        return success_response("User Retrive Successfully!", serializer.data)
 
 
 class SendMultipleCouponsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = CouponMultiEmailSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        s = CouponMultiEmailSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
 
-        coupon_ids = [int(c) for c in serializer.validated_data['coupon_ids']]
-        email = serializer.validated_data['email']
-        print(coupon_ids)
-        coupons = Coupon.objects.filter(id__in=coupon_ids)
-        if not coupons.exists():
-            return failure_response({"error": "No valid coupons found."}, status=status.HTTP_404_NOT_FOUND)
+        coupon_ids = [int(c) for c in s.validated_data['coupon_ids']]
+        email = s.validated_data['email']
+        template_id = s.validated_data.get('template_id')
 
-        user = CustomUser.objects.filter(email=email)
-        print(coupons)
-        
-        if not user.exists():
+        coupons = list(Coupon.objects.filter(id__in=coupon_ids, is_active=True))
+        if not coupons:
+            return failure_response({"error": "No valid active coupons found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
             return failure_response("No valid user found...", status=status.HTTP_400_BAD_REQUEST)
 
-        subject = "🎁 Special Discount Coupons Just for You!"
-        coupon_list = "\n".join([f"- {c.name} ({c.code}) — Expires {c.expiry_date}" for c in coupons])
-        message = f"""
-                Hello!
+        template = None
+        if template_id:
+            template = get_object_or_404(EmailTemplate, id=template_id, is_active=True)
 
-                You have received special discount coupons:
+        # Create a log row (optional)
+        log = None
+        with transaction.atomic():
+            # if multiple coupons, you can log one row per coupon, or pick first
+            log = CouponEmailLog.objects.create(
+                coupon=coupons[0],  # or create multiple logs if needed
+                template=template,
+            )
+            log.recipients.set([user])
 
-                {coupon_list}
-
-                Enjoy your shopping!
-
-                — Your Company Team
-                """
-        from_email = "noreply@yourdomain.com"
-        recipient_list = [u.email for u in user if u.email]
-
-        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+            # start background sending AFTER commit
+            transaction.on_commit(lambda: send_coupons_in_background(
+                coupons=coupons,
+                users=[user],
+                template=template,
+                from_email="noreply@yourdomain.com",
+            ))
 
         return success_response(
-            message= f"Sent {len(coupons)} coupons to {len(recipient_list)} users.",
-            data={ "sent_coupons": [c.code for c in coupons]}
+            message=f"Email is being sent in the background to {user.email} (coupons: {len(coupons)}).",
+            data={
+                "log_id": log.id if log else None,
+                "sent_coupons": [c.code for c in coupons],
+                "template_used": template.name if template else "default"
+            }
         )
-

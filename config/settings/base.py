@@ -12,16 +12,44 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 
+SUMMERNOTE_CONFIG = {
+    'iframe': True,  # use iframe mode
+    'toolbar': [
+        ['style', ['style']],
+        ['font', ['bold', 'italic', 'underline', 'clear']],
+        ['fontname', ['fontname']],
+        ['color', ['color']],
+        ['para', ['ul', 'ol', 'paragraph']],
+        ['table', ['table']],
+        ['insert', ['link']],
+        ['view', ['fullscreen', 'codeview']],
+    ],
+}
+
+
+# Optional but handy defaults
+TINYMCE_DEFAULT_CONFIG = {
+    "height": 420,
+    "menubar": True,
+    "plugins": "advlist autolink lists link image charmap preview anchor "
+               "searchreplace visualblocks code fullscreen insertdatetime media "
+               "table help wordcount",
+    "toolbar": "undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | "
+               "bullist numlist outdent indent | link image media | table | code | preview",
+    "block_formats": "Paragraph=p; Heading 2=h2; Heading 3=h3",
+    "content_style": "body {font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;}",
+    "branding": False,
+}
 
 
 # Application definition
 INSTALLED_APPS = [
-    # "unfold",  # Must be before django.contrib.admin
-    # "unfold.contrib.filters",  # Optional filters
-    # "unfold.contrib.forms",  # Optional form widgets
-    # "unfold.contrib.import_export",  # Optional import/export
-    # "unfold.contrib.guardian",  # Optional permissions
-    # "unfold.contrib.simple_history",  # Optional history
+    "unfold",
+    
+    # 'jet',
+    # 'daisyui_dashboard',
+    # "admin_interface",
+    # "colorfield",
     
     # Django core apps
     'django.contrib.admin',
@@ -45,7 +73,8 @@ INSTALLED_APPS = [
     'django_filters',
     # 'django_celery_beat',
     "channels",
-
+    
+    "tinymce",
     # Local apps (your custom apps - modify for each project)
     'apps.core',
     'apps.auths',
@@ -58,7 +87,14 @@ INSTALLED_APPS = [
     'apps.booking',
     'apps.cart',
     'apps.coupon',
+    "import_export",
+    
+    'django_summernote',
+    'apps.custom_home',
 ]
+
+X_FRAME_OPTIONS = "SAMEORIGIN"              # allows you to use modals insated of popups
+SILENCED_SYSTEM_CHECKS = ["security.W019"]  # ignores redundant warning messages
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -80,7 +116,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': [BASE_DIR / "apps/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -88,6 +124,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.notification.context_processors.notification_context',
             ],
         },
     },
@@ -130,11 +167,7 @@ LOGOUT_REDIRECT_URL = '/'
 # Session configuration
 SESSION_COOKIE_AGE = 3600  # 1 hour
 
-# Static files configuration
-STATIC_URL = '/static/'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # must be a list or tuple
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # optional but needed for collectstatic
+
 # Media files configuration
 # Option 1: Local media files (development)
 MEDIA_URL = '/media/'
@@ -260,3 +293,10 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+
+# Static files configuration
+STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [BASE_DIR / 'static']  # must be a list or tuple
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # optional but needed for collectstatic

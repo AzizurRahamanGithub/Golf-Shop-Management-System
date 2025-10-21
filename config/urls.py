@@ -13,7 +13,9 @@ def favicon(request):
 urlpatterns = [
     path("", home),  
     re_path(r'^favicon.ico$', favicon), 
-    path('admin/', admin.site.urls),  
+    path('admin/', admin.site.urls), 
+    path('summernote/', include('django_summernote.urls')),
+    path("tinymce/", include("tinymce.urls")),
     path('api/v1/', include([
         path('schema-viewer/', include('schema_viewer.urls')),
         path('auth/', include('apps.auths.urls')),
@@ -26,7 +28,7 @@ urlpatterns = [
         path('order/', include('apps.cart.urls')),
         path('booking/', include('apps.booking.urls')),
         path('coupon/', include('apps.coupon.urls')),
-
+       
     ])),
 ]
 

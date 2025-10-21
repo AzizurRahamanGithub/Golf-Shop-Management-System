@@ -12,7 +12,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from .models import Booking
+from .models import Booking, Payment
 from .serializers import  BookingSerializer, BookingHistorySerializer
 from apps.core.response import failure_response, success_response
 from apps.cart.models import Cart
@@ -82,6 +82,15 @@ class BookingView(APIView):
                 booking = serializer.save(
                     user=request.user,
                     payment_id=intent.id  # store Stripe PaymentIntent ID
+                )
+                
+                # ✅ Create Payment record automatically
+                Payment.objects.create(
+                    booking=booking,
+                    payment_id=intent.id,
+                    amount=booking.final_total,
+                    status='completed',
+                    method='card'
                 )
 
                 # clear cart items after successful booking

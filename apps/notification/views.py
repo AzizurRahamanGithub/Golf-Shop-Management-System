@@ -57,3 +57,5 @@ class MarkAllNotificationsReadView(APIView):
             status.HTTP_200_OK
         )
     
+    
+

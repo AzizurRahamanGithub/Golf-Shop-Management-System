@@ -1,0 +1,357 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice #{{ booking.id }}</title>
+  <style>
+    body { 
+      font-family: Helvetica, Arial, sans-serif; 
+      font-size: 10px; 
+      color: #333;
+      line-height: 1.2;
+      margin: 0;
+      padding: 10px;
+    }
+    
+    .header {
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2c5aa0;
+      overflow: hidden;
+    }
+    
+    .company-info {
+      float: left;
+      width: 60%;
+    }
+    
+    .invoice-meta {
+      float: right;
+      width: 35%;
+      text-align: right;
+    }
+    
+    .company-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2c5aa0;
+      margin: 0 0 3px 0;
+    }
+    
+    .company-details {
+      font-size: 8px;
+      color: #666;
+      margin: 2px 0;
+    }
+    
+    .invoice-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c5aa0;
+      margin: 0 0 5px 0;
+    }
+    
+    .invoice-number {
+      font-size: 11px;
+      font-weight: 600;
+      margin: 2px 0;
+    }
+    
+    .invoice-date {
+      font-size: 9px;
+      color: #666;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+    
+    .status-progress { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    .status-confirm { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .status-completed { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    
+    .columns {
+      margin: 10px 0 15px 0;
+      overflow: hidden;
+    }
+    
+    .column {
+      float: left;
+      width: 48%;
+      margin-right: 2%;
+    }
+    
+    .column:last-child {
+      margin-right: 0;
+    }
+    .invoice-title {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c5aa0;
+    margin-top: 20px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #eaeaea;
+     }
+
+    
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #2c5aa0;
+      margin: 0 0 6px 0;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #eaeaea;
+    }
+    
+    .info-box {
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 4px;
+      border-left: 2px solid #2c5aa0;
+      font-size: 9px;
+    }
+    
+    .info-item {
+      margin: 4px 0;
+    }
+    
+    .info-label {
+      font-weight: 600;
+      color: #555;
+      display: inline-block;
+      width: 70px;
+    }
+    
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 15px 0;
+      font-size: 9px;
+    }
+    
+    .invoice-table th {
+      background: #2c5aa0;
+      color: white;
+      font-weight: 600;
+      padding: 6px 4px;
+      text-align: left;
+      font-size: 8px;
+    }
+    
+    .invoice-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #eaeaea;
+    }
+    
+    .text-right {
+      text-align: right;
+    }
+    
+    .text-bold {
+      font-weight: 600;
+    }
+    
+    .totals-section {
+      width: 40%;
+      margin-left: auto;
+      margin-top: 10px;
+    }
+    
+    .total-row {
+      overflow: hidden;
+      padding: 4px 0;
+      border-bottom: 1px solid #eaeaea;
+      font-size: 9px;
+    }
+    
+    .total-label {
+      float: left;
+      font-weight: 600;
+    }
+    
+    .total-value {
+      float: right;
+    }
+    
+    .grand-total {
+      font-size: 11px;
+      font-weight: 700;
+      color: #2c5aa0;
+      border-bottom: none;
+      border-top: 1px solid #2c5aa0;
+      margin-top: 3px;
+    }
+    
+    .additional-section {
+      margin: 12px 0;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      font-size: 9px;
+    }
+    
+    .section-header {
+      font-size: 10px;
+      font-weight: 600;
+      color: #2c5aa0;
+      margin-bottom: 5px;
+    }
+    
+    .footer {
+      margin-top: 5px;
+      font-size: 7px;
+      color: #666;
+      text-align: center;
+      border-top: none;
+    }
+    
+    .thank-you {
+      font-size: 9px;
+      font-weight: 600;
+      color: #2c5aa0;
+      text-align: center;
+      margin: 5px 0 8px 0;
+    }
+    
+    .color-muted { color: #666; }
+    .color-success { color: #28a745; }
+    .color-danger { color: #dc3545; }
+    
+    .clearfix {
+      clear: both;
+    }
+    
+    .compact-item {
+      margin: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="company-info">
+      <div class="company-name">YOUR COMPANY</div>
+      <div class="company-details">
+        123 Business Avenue, City, State 12345<br>
+        Phone: (555) 123-4567 | Email: info@yourcompany.com
+      </div>
+    </div>
+      
+    </div>
+
+    <div class="column">
+      <div class="invoice-title">INVOICE</div>
+      <div class="info-box">
+        <div class="compact-item">#{{ booking.id }}</div>
+        <div class="compact-item">{{ booking.created_at|date:"M d, Y H:i" }}</div>
+            {% if booking.booking_status == 'progress' %}
+        <div class="compact-item">In Progress</div>
+      {% elif booking.booking_status == 'confirm' %}
+        <div class="compact-item">Confirmed</div>
+      {% elif booking.booking_status == 'completed' %}
+        <div class="compact-item">Completed</div>
+      {% endif %}</div>
+    </div>
+
+
+    <div class="clearfix"></div>
+  </div>
+
+  <div class="columns">
+    <div class="column">
+      <div class="section-title">Bill To</div>
+      <div class="info-box">
+        <div class="compact-item"><strong>{{ booking.full_name }}</strong></div>
+        <div class="compact-item">{{ booking.email }}</div>
+        <div class="compact-item">{{ booking.phone }}</div>
+        <div class="compact-item">{{ booking.street_address }}, {{ booking.city }}</div>
+      </div>
+    </div>
+    
+    <div class="column">
+      <div class="section-title">Booking Details</div>
+      <div class="info-box">
+        <div class="compact-item"><strong>{{ booking.shop_type }}</strong></div>
+        <div class="compact-item">{{ booking.number_of_guests }} Guests</div>
+        <div class="compact-item">{{ booking.start_date }} {{ booking.start_time }}</div>
+        <div class="compact-item">to {{ booking.end_date }} {{ booking.end_time }}</div>
+        {% if booking.package %}
+        <div class="compact-item">Package: {{ booking.package.name }}</div>
+        {% endif %}
+        {% if booking.coupon %}
+        <div class="compact-item">Coupon: {{ booking.coupon.code }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+
+  <div class="section-title">Invoice Summary</div>
+  <table class="invoice-table">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="text-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Booking Total</td>
+        <td class="text-right">${{ booking.total_price }}</td>
+      </tr>
+      
+      {% if booking.discount_amount and booking.discount_amount|floatformat:2 != "0.00" %}
+      <tr>
+        <td>Discount{% if booking.coupon %} ({{ booking.coupon.code }}){% endif %}</td>
+        <td class="text-right color-danger">-${{ booking.discount_amount }}</td>
+      </tr>
+      {% endif %}
+      
+      {% if booking.tax and booking.tax|floatformat:2 != "0.00" %}
+      <tr>
+        <td>Tax & Fees</td>
+        <td class="text-right">${{ booking.tax }}</td>
+      </tr>
+      {% endif %}
+
+      <tr style="margin-top: 10px;">
+        <td style="font-weight: bold; font-size: 14px; color: #2c5aa0; padding-bottom: 5px;">Subtotal:</td>
+        <td class="text-right" style="font-weight: bold; font-size: 14px; color: #2c5aa0; padding-bottom: 5px;">${{ booking.total_price }}</td>
+        </tr>
+
+
+    </tbody>
+  </table>
+
+  {% if booking.damage_waiver or booking.signature %}
+  <div class="additional-section">
+    {% if booking.damage_waiver %}
+    <div class="compact-item"><strong>Damage Waiver:</strong> Included</div>
+    {% endif %}
+    
+    {% if booking.signature %}
+    <div class="compact-item"><strong>Signature:</strong> {{ booking.signature }}</div>
+    {% endif %}
+    
+    {% if booking.payment_id %}
+    <div class="compact-item"><strong>Payment ID:</strong> {{ booking.payment_id }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="thank-you">
+    Thank you for your business!
+  </div>
+
+  <div class="footer">
+    <p>This is computer-generated invoice | Payment due upon receipt<br>
+        YOUR COMPANY - 123 Business Avenue - (555) 123-4567</p>
+  </div>
+</body>
+</html>

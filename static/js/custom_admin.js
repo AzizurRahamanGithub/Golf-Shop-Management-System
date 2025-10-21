@@ -1,23 +1,20 @@
-document.addEventListener("DOMContentLoaded", function() {
-    // Delete single image
-    document.querySelectorAll(".delete-single").forEach(btn => {
-        btn.addEventListener("click", function() {
-            if (confirm("Are you sure you want to delete this single image?")) {
-                const url = btn.dataset.url;
-                fetch(`/admin/blogs/blog/delete_image/?url=${encodeURIComponent(url)}`)
-                    .then(() => location.reload());
-            }
-        });
-    });
 
-    // Delete multiple images
-    document.querySelectorAll(".delete-multiple").forEach(btn => {
-        btn.addEventListener("click", function() {
-            if (confirm("Are you sure you want to delete this image?")) {
-                const url = btn.dataset.url;
-                fetch(`/admin/blogs/blog/delete_image/?url=${encodeURIComponent(url)}`)
-                    .then(() => location.reload());
-            }
-        });
-    });
+document.addEventListener("DOMContentLoaded", () => {
+  const badge = document.querySelector(".notification-badge");
+
+  if (badge) {
+    setInterval(() => {
+      fetch("/admin/notifications/unread-count/")
+        .then(res => res.json())
+        .then(data => {
+          if (data.unread_count > 0) {
+            badge.textContent = data.unread_count;
+            badge.style.display = "inline";
+          } else {
+            badge.style.display = "none";
+          }
+        })
+        .catch(err => console.error("Notification fetch error:", err));
+    }, 10000); // every 10 seconds
+  }
 });

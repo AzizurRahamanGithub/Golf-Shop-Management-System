@@ -8,7 +8,7 @@ from django.db.models import Q
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'created_at', 'updated_at']
+        fields = ["id", "name", "image", "created_at", "updated_at"]
         read_only_fields= ['id', 'created_at', 'updated_at']
 
 
@@ -20,23 +20,18 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 
 class PackageSerializer(serializers.ModelSerializer):
-    features = FeatureSerializer(many=True)
+    features = FeatureSerializer(many=True, read_only=True)
     average_rating = serializers.SerializerMethodField()
     reviews_count = serializers.SerializerMethodField()
+    booked_count = serializers.SerializerMethodField()
+    available_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Package
         fields = [
-            "id",
-            "name",
-            "price",
-            "images",
-            "description",
-            "features",
-            "created_at",
-            "updated_at",
-            "average_rating",
-            "reviews_count",
+            "id", "name", "price", "images", "description", "features",
+            "created_at", "updated_at", "average_rating", "reviews_count",
+            "booked_count", "available_count"
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -46,6 +41,11 @@ class PackageSerializer(serializers.ModelSerializer):
     def get_reviews_count(self, obj):
         return obj.reviews.count()
 
+    def get_booked_count(self, obj):
+        return obj.bookings.count() if hasattr(obj, "bookings") else 0
+
+    def get_available_count(self, obj):
+        return obj.stock
 
 
 
@@ -71,18 +71,28 @@ class ShopSerializer(serializers.ModelSerializer):
             "price",
             "publish_date",
             "images",
+            "booked_count",
+            "available_count",
             "created_at",
             "updated_at",
             "average_rating",
             "reviews_count",
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def get_average_rating(self, obj):
         return obj.reviews.aggregate(avg=Avg("rating"))["avg"] or 0
 
     def get_reviews_count(self, obj):
         return obj.reviews.count()
+
+    def get_booked_count(self, obj):
+        # ✅ Universal method: works with any DB
+        return obj.bookings.count() if hasattr(obj, "bookings") else 0
+
+    def get_available_count(self, obj):
+        return obj.stock
+
     
     
 class ReviewSerializer(serializers.ModelSerializer):

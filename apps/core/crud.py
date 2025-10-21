@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import 
 from .response import success_response, failure_response
 
 class DynamicModelViewSet(viewsets.ModelViewSet):
@@ -7,7 +7,7 @@ class DynamicModelViewSet(viewsets.ModelViewSet):
     Generic CRUD for any model with automatic user assignment.
     Now supports perform_create and perform_update hooks.
     """
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def __init__(self, *args, **kwargs):
         self.model = kwargs.pop('model', None)

@@ -10,7 +10,7 @@ from apps.coupon.models import Coupon
 class Booking(models.Model):
     STATUS_CHOICES = [
         ('progress', 'Progress'),
-        ('rent started', 'Rent Started'),
+        ('confirm', 'Confirm'),
         ('completed', 'Completed')
     ]
     

@@ -4,6 +4,39 @@ from django.db import models
 from django.utils import timezone
 from apps.auths.models import CustomUser
 
+
+from django.db import models
+from django.utils.html import strip_tags
+
+class EmailCategory(models.TextChoices):
+    PROMOTION = 'promotion', 'Promotion'
+    COUPON = 'coupon', 'Coupon'
+    EVENT = 'event', 'Event'
+    REMINDER = 'reminder', 'Reminder'
+    CUSTOM = 'custom', 'Custom'
+
+
+# models.py (snippet)
+class EmailTemplate(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, choices=EmailCategory.choices, default=EmailCategory.CUSTOM)
+    subject = models.CharField(max_length=255)
+    body_html = models.TextField()
+    body_text = models.TextField(blank=True, null=True, editable=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        from django.utils.html import strip_tags
+        self.body_text = strip_tags(self.body_html or "")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+
 class DiscountType(models.TextChoices):
     PERCENTAGE = 'percentage', 'Percentage'
     FIXED = 'fixed', 'Fixed Amount'
@@ -54,6 +87,7 @@ class Coupon(models.Model):
 
 class CouponEmailLog(models.Model):
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name="email_logs")
+    template = models.ForeignKey('EmailTemplate', on_delete=models.SET_NULL, null=True, blank=True)
     recipients = models.ManyToManyField(CustomUser, related_name="coupon_emails")
     sent_at = models.DateTimeField(auto_now_add=True)
 

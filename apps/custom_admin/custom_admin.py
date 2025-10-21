@@ -162,7 +162,8 @@ UNFOLD = {
                 "items": [
                     {"title": _("Carts"), "icon": "shopping_cart", "link": "/admin/cart/cart/"},
                     {"title": _("Coupons"), "icon": "local_offer", "link": "/admin/coupon/coupon/"},
-                    {"title": _("Coupon Email Logs"), "icon": "mail", "link": "/admin/coupon/couponemaillog/"},
+                    {"title": _("Email Logs"), "icon": "mail", "link": "/admin/coupon/couponemaillog/"},
+                    {"title": _("Email Templates"), "icon": "wysiwyg", "link": "/admin/coupon/emailtemplate/"},  # <— add this
                 ],
             },
 

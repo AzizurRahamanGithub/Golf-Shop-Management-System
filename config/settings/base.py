@@ -27,6 +27,21 @@ SUMMERNOTE_CONFIG = {
 }
 
 
+# Optional but handy defaults
+TINYMCE_DEFAULT_CONFIG = {
+    "height": 420,
+    "menubar": True,
+    "plugins": "advlist autolink lists link image charmap preview anchor "
+               "searchreplace visualblocks code fullscreen insertdatetime media "
+               "table help wordcount",
+    "toolbar": "undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | "
+               "bullist numlist outdent indent | link image media | table | code | preview",
+    "block_formats": "Paragraph=p; Heading 2=h2; Heading 3=h3",
+    "content_style": "body {font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;}",
+    "branding": False,
+}
+
+
 # Application definition
 INSTALLED_APPS = [
     "unfold",
@@ -58,7 +73,8 @@ INSTALLED_APPS = [
     'django_filters',
     # 'django_celery_beat',
     "channels",
-
+    
+    "tinymce",
     # Local apps (your custom apps - modify for each project)
     'apps.core',
     'apps.auths',

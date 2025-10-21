@@ -10,7 +10,7 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 import random
 from rest_framework import generics
-
+from rest_framework.response import Response
 # Create your views here.
 from apps.core.crud import DynamicModelViewSet
 
@@ -38,10 +38,18 @@ class ShopByCategoryView(generics.ListAPIView):
         category_id = self.kwargs.get("category_id")
         return Shop.objects.filter(
             category_id=category_id,
-            is_active=True,
-            stock__gt=0
+            is_active=True
         )
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "success": True,
+            "message": "Shop by category retrieved successfully!",
+            "status ": "200",
+            "data": serializer.data
+        })
 
 class CategoryViewSet(DynamicModelViewSet):
     queryset = Category.objects.all()

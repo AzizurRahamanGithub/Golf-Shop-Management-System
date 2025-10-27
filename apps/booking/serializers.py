@@ -9,6 +9,12 @@ from apps.products.serializers import ShopSerializer, PackageSerializer
 from apps.coupon.models import Coupon
 
 
+from rest_framework import serializers
+from decimal import Decimal
+from datetime import datetime
+from .models import Booking, Coupon, Shop, Package
+from apps.cart.models import Cart
+
 class BookingSerializer(serializers.ModelSerializer):
     coupon_code = serializers.CharField(write_only=True, required=False, allow_blank=True)
     tax_amount = serializers.SerializerMethodField()
@@ -41,13 +47,46 @@ class BookingSerializer(serializers.ModelSerializer):
         if not cart.items.exists():
             raise serializers.ValidationError("Cart is empty.")
 
-        # Step 1: Calculate subtotal
+        # =============================
+        # 🧠 Booking Time Conflict Check
+        # =============================
+        start_date = data.get("start_date")
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+
+        # Get shop from cart (your flow uses Cart → Booking)
+        shop_ids = [i.shop.id for i in cart.items.all() if i.shop]
+        shop = Shop.objects.filter(id__in=shop_ids).first() if shop_ids else None
+
+        if not shop:
+            raise serializers.ValidationError("No valid shop found for booking.")
+
+        # Check for overlapping bookings
+        overlapping = Booking.objects.filter(
+            shop=shop,
+            start_date=start_date,
+            start_time__lt=end_time,
+            end_time__gt=start_time,
+        )
+
+        # Exclude current booking if updating
+        if self.instance:
+            overlapping = overlapping.exclude(id=self.instance.id)
+
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                "This shop is already booked during the selected time range. Please choose another time slot."
+            )
+
+        # =============================
+        # 💰 Price, Tax & Coupon Logic
+        # =============================
         total_price = Decimal(sum(item.total_price() for item in cart.items.all()))
 
-        # Step 2: Add 5% tax
+        # Add 5% tax
         tax = (total_price * Decimal('0.05')).quantize(Decimal('0.01'))
 
-        # Step 3: Check and apply coupon
+        # Coupon logic
         coupon_code = self.initial_data.get("coupon_code", "").strip()
         coupon = None
         discount_amount = Decimal('0.00')
@@ -63,55 +102,49 @@ class BookingSerializer(serializers.ModelSerializer):
             if coupon.remaining_uses() <= 0:
                 raise serializers.ValidationError({"coupon_code": "Coupon usage limit reached."})
 
-
-            # Apply discount based on type
+            # Apply discount
             if coupon.discount_type == 'percentage':
                 discount_amount = (total_price * (coupon.discount_value / Decimal('100'))).quantize(Decimal('0.01'))
             elif coupon.discount_type == 'fixed':
                 discount_amount = Decimal(coupon.discount_value).quantize(Decimal('0.01'))
 
-        # Step 4: Prevent over-discount
+        # Prevent over-discount
         if discount_amount > total_price:
             discount_amount = total_price
 
-        # Step 5: Calculate final total
+        # Calculate final total
         final_total = (total_price + tax - discount_amount).quantize(Decimal('0.01'))
 
-        # Step 6: Collect related data
-        shop_ids = [i.shop.id for i in cart.items.all() if i.shop]
-        package_ids = [i.package.id for i in cart.items.all() if i.package]
-
-        # Store values in validated_data (only model fields)
+        # Store calculated values
         data.update({
             "shops": shop_ids,
-            "packages": package_ids,
-            "shop": Shop.objects.filter(id__in=shop_ids).first() if shop_ids else None,
-            "package": Package.objects.filter(id__in=package_ids).first() if package_ids else None,
+            "packages": [i.package.id for i in cart.items.all() if i.package],
+            "shop": shop,
+            "package": Package.objects.filter(id__in=[i.package.id for i in cart.items.all() if i.package]).first(),
             "total_price": total_price,
             "tax": tax,
             "discount_amount": discount_amount,
             "final_total": final_total,
         })
 
-        # Store coupon separately (not part of Booking model)
         self._coupon_instance = coupon
-
         return data
 
     def create(self, validated_data):
         # Remove coupon_code (not a model field)
         validated_data.pop("coupon_code", None)
 
-        # Create the booking
+        # Create booking
         booking = super().create(validated_data)
 
-        # Handle coupon usage safely
+        # Update coupon usage
         coupon = getattr(self, "_coupon_instance", None)
         if coupon:
             coupon.used_count += 1
             coupon.save()
 
         return booking
+
 
 
 

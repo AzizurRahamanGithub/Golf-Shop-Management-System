@@ -10,11 +10,11 @@ router = DefaultRouter()
 router.register(r'help-us-improve', HelpUsImproveView, basename='improving'),
 router.register(r'admin/users', AdminUserView, basename='user')
 
-
+from .tests import TestMailView
 
 urlpatterns = [
      path('', include(router.urls)),
-     
+     path('test-mail/', TestMailView.as_view(), name='test-mail'),
      # --- register
     path("register/", RegisterAPIView.as_view(), name="register"),
     path("resend-otp/", ResendOTPAPIView.as_view(), name="resend-otp"),     

@@ -28,12 +28,15 @@ class CouponAdmin(admin.ModelAdmin):
 # CouponEmailLog Admin
 # -------------------------
 # apps/coupon/admin.py (only the admin for CouponEmailLog)
+from django.contrib import admin, messages
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template import Template, Context
+from .models import CouponEmailLog
 
 @admin.register(CouponEmailLog)
 class CouponEmailLogAdmin(admin.ModelAdmin):
-    list_display = ("coupon", "template", "sent_at")   # show template column
+    list_display = ("coupon", "template", "sent_at")
     search_fields = ("coupon__code",)
     list_filter = ("sent_at", "template")
     filter_horizontal = ("recipients",)
@@ -44,36 +47,57 @@ class CouponEmailLogAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
+
         obj = form.instance
         recipients = list(obj.recipients.all())
+
+        # quick debug:
+        print("=== EMAIL LOG EXECUTION ===")
+        print("DEFAULT_FROM_EMAIL:", settings.DEFAULT_FROM_EMAIL)
+        print("RECIPIENTS:", [getattr(u, "email", None) for u in recipients])
+
         if not recipients:
-            self.message_user(request, "⚠️ No recipients selected. Email not sent.", level=messages.WARNING)
+            self.message_user(
+                request,
+                "⚠️ No recipients selected. Email not sent.",
+                level=messages.WARNING
+            )
             return
 
-        # build context (single + list)
         coupon = obj.coupon
         coupons = [coupon]
 
-        # use one SMTP connection
         sent_count = 0
+        fail_count = 0
+
         with get_connection() as conn:
             for user in recipients:
-                if not user.email:
+                to_email = getattr(user, "email", None)
+                if not to_email:
                     continue
 
-                ctx = {"user": user, "coupon": coupon, "coupons": coupons}
+                ctx = {
+                    "user": user,
+                    "coupon": coupon,
+                    "coupons": coupons,
+                }
 
+                # Safe template rendering
                 if obj.template:
-                    subject = Template(obj.template.subject).render(Context(ctx))
-                    html_body = Template(obj.template.body_html).render(Context(ctx))
-                    text_body = Template(obj.template.body_text or "").render(Context(ctx))
+                    raw_subject = obj.template.subject or ""
+                    raw_html = obj.template.body_html or ""
+                    raw_text = obj.template.body_text or ""
+
+                    subject = Template(raw_subject).render(Context(ctx))
+                    html_body = Template(raw_html).render(Context(ctx))
+                    text_body = Template(raw_text).render(Context(ctx))
                 else:
-                    # fallback to simple fixed content (only if no template selected)
                     subject = "🎁 You've received a new discount coupon!"
                     text_body = (
                         f"Hello {getattr(user, 'first_name', '') or ''}\n\n"
                         f"You've received a special coupon:\n\n"
-                        f"- {coupon.name} ({coupon.code})\n- Expires: {coupon.expiry_date}\n\n"
+                        f"- {coupon.name} ({coupon.code})\n"
+                        f"- Expires: {coupon.expiry_date}\n\n"
                         "Enjoy your shopping!\n— Your Company Team"
                     )
                     html_body = f"""
@@ -86,16 +110,38 @@ class CouponEmailLogAdmin(admin.ModelAdmin):
                         <p>Enjoy your shopping!<br>— Your Company Team</p>
                     """
 
-                msg = EmailMultiAlternatives(subject, text_body, "noreply@yourdomain.com", [user.email], connection=conn)
-                msg.attach_alternative(html_body, "text/html")
-                msg.send(fail_silently=False)
-                sent_count += 1
+                try:
+                    # USE VERIFIED SENDER HERE
+                    msg = EmailMultiAlternatives(
+                        subject,
+                        text_body,
+                        settings.DEFAULT_FROM_EMAIL,  # << critical
+                        [to_email],
+                        connection=conn
+                    )
+                    msg.attach_alternative(html_body, "text/html")
+                    result = msg.send(fail_silently=False)
 
-        self.message_user(
-            request,
-            f"✅ Email sent to {sent_count} user(s) using {'template '+obj.template.name if obj.template else 'default content'}.",
-            level=messages.SUCCESS,
-        )
+                    print("SENT TO:", to_email, "RESULT:", result)
+                    sent_count += 1
+                except Exception as e:
+                    print("FAILED TO SEND TO:", to_email)
+                    print(e)
+                    fail_count += 1
+
+        if fail_count == 0:
+            self.message_user(
+                request,
+                f"✅ Email attempted to {sent_count} recipient(s).",
+                level=messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                f"❌ Sent {sent_count}, failed {fail_count}. Check runserver console for details.",
+                level=messages.ERROR,
+            )
+
 
 # -------------------------
 # EmailTemplate Admin (TinyMCE)

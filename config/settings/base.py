@@ -187,14 +187,19 @@ if AWS_STORAGE_BUCKET_NAME:
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
 
 # Email configuration
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
+
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-relay.brevo.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False  # important for Brevo on 587
+
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')   # "Putt putt play <Juan@puttputtplay.com>"
+CONTACT_EMAIL = os.getenv('CONTACT_EMAIL')  
 
 
 # Django REST Framework configuration

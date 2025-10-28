@@ -5,6 +5,7 @@ from .views import (
     BookingView,
     BookingDetailView,
     BookingHistoryView,
+    BookingValidationView
 )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     # Booking endpoints
     # -----------------------------
     path("summery/", BookingView.as_view(), name="booking-list"),  # list user bookings
-    path("summery/<int:booking_id>/", BookingDetailView.as_view(), name="booking-detail"),
-    path("summery/history/", BookingHistoryView.as_view(), name="booking-history"),
+    path("summery/validation/", BookingValidationView.as_view(), name="booking-validation"),
+    path('booking-history/', BookingHistoryView.as_view(), name='booking-history'),
+    path('booking-detail/<int:booking_id>/', BookingDetailView.as_view(), name='booking-detail'),
 ]

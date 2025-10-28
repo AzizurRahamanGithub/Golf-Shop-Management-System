@@ -1,5 +1,6 @@
 from .models import Booking, Payment
-from .serializers import BookingSerializer, BookingHistorySerializer
+
+from .serializers import BookingSerializer, BookingHistorySerializer, BookingValidationSerializer
 from apps.cart.models import Cart
 from apps.core.response import failure_response, success_response
 from apps.core.pagination import CustomPagination
@@ -10,7 +11,9 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 import stripe
 import logging
-
+from decimal import Decimal
+from .models import Booking, Shop
+from django.db.models import Q
 # --- Setup ---
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -39,7 +42,7 @@ class CreatePaymentIntentView(APIView):
             intent = stripe.PaymentIntent.create(
                 amount=amount,
                 currency="usd",
-                automatic_payment_methods={"enabled": True},
+                payment_method_types=["card"],  # ← Use this for manual confirmation
                 metadata={"user_id": request.user.id},
             )
 
@@ -60,6 +63,66 @@ class CreatePaymentIntentView(APIView):
 # =====================================================
 # 2️⃣  Confirm Booking After Payment
 # =====================================================
+
+class BookingValidationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Get the cart for the authenticated user
+            cart = Cart.objects.filter(user=request.user).order_by('-created_at').first()
+
+            if not cart:
+                return failure_response(
+                    message="Cart does not exist.",
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not cart.items.exists():
+                return failure_response(
+                    message="Cart is empty.",
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Initialize the serializer with request data and context (user, cart)
+            serializer = BookingValidationSerializer(
+                data=request.data,
+                context={'request': request, 'cart': cart}  # Pass the cart to the context
+            )
+
+            # Step 1: Perform validation
+            if serializer.is_valid():
+                # Step 2: Return a successful response with validated data
+                validated_data = serializer.validated_data
+                return success_response(
+                    message="Booking fields validated successfully.",
+                    data={
+                        "start_date": validated_data["start_date"],
+                        "end_date": validated_data["end_date"],
+                        "start_time": validated_data["start_time"],
+                        "end_time": validated_data["end_time"]
+                    },
+                    status=status.HTTP_200_OK
+                )
+
+            # If validation fails, return the error response
+            return failure_response(
+                message="Invalid data provided.",
+                error=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+            # Log the error and return a server error response
+            logger.error(f"Error in validating booking fields: {str(e)}")
+            return failure_response(
+                message="Unexpected error occurred.",
+                error=str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+            
+            
 class ConfirmBookingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -172,16 +235,62 @@ class BookingHistoryView(APIView):
 
     def get(self, request):
         try:
+            # Get all bookings for the authenticated user, ordered by creation date
             bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
+            
+            # Serialize the bookings using BookingHistorySerializer
             serializer = BookingHistorySerializer(bookings, many=True, context={'request': request})
-            return success_response("Booking history retrieved successfully.", serializer.data, status.HTTP_200_OK)
+            
+            # Return the successful response with serialized data
+            return success_response(
+                message="Booking history retrieved successfully.",
+                data=serializer.data,
+                status=status.HTTP_200_OK
+            )
 
         except Exception as e:
             logger.error(f"Booking history error: {str(e)}")
-            return failure_response("An error occurred while fetching booking history.", str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return failure_response(
+                message="An error occurred while fetching booking history.",
+                error=str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 
+class BookingDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, booking_id):
+        try:
+            # Retrieve the booking with the provided booking_id for the authenticated user
+            booking = Booking.objects.filter(id=booking_id, user=request.user).first()
+            
+            # If no booking is found, return a failure response
+            if not booking:
+                return failure_response(
+                    message="Booking not found.",
+                    error="The requested booking does not exist.",
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Serialize the booking details using BookingHistorySerializer
+            serializer = BookingHistorySerializer(booking, context={'request': request})
+            
+            # Return the successful response with serialized data for the specific booking
+            return success_response(
+                message="Booking details retrieved successfully.",
+                data=serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.error(f"Booking detail error: {str(e)}")
+            return failure_response(
+                message="An error occurred while fetching booking details.",
+                error=str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 

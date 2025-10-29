@@ -45,7 +45,6 @@ COPY config/ ./config/
 COPY apps/ ./apps/
 
 # Optional: expose both ports
-EXPOSE 6543
-EXPOSE 6724
+EXPOSE 8000
 
 

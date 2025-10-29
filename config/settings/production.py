@@ -47,7 +47,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://31.97.99.135:8000',
     'https://puttputtplay.com',
-    'https://api/v1/puttputtplay.com',
+    'https://api.puttputtplay.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -65,7 +65,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://31.97.99.135:8000',
     'https://puttputtplay.com',
-    'https://api/v1/puttputtplay.com',
+    'https://api.puttputtplay.com',
 ]
 
 

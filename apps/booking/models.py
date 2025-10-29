@@ -20,7 +20,7 @@ class Booking(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     booking_status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='progress')
-    number_of_guests = models.PositiveIntegerField()
+    number_of_guests = models.CharField(max_length=100)
     shop_type = models.CharField(max_length=100)
 
     full_name = models.CharField(max_length=100)

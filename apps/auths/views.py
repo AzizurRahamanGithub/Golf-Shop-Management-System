@@ -646,34 +646,35 @@ class GoogleOauth(APIView):
             })
 
 
+from django.conf import settings
+
 class ContactMessageView(APIView):
     def post(self, request):
         serializer = ContactMessageSerializer(data=request.data)
-        DEFAULT_FROM_EMAIL = "officeazizur@gmail.com"
-        CONTACT_EMAIL = "officeazizur@gmail.com"
 
         if serializer.is_valid():
             contact_message = serializer.save()
 
-            # send email to admin
             subject = f"New Contact Message: {contact_message.subject}"
             message = (
                 f"Name: {contact_message.full_name}\n"
                 f"Email: {contact_message.email}\n\n"
                 f"Message:\n{contact_message.message}"
             )
+
             send_mail(
                 subject,
                 message,
-                DEFAULT_FROM_EMAIL,  # from
-                [CONTACT_EMAIL],      # to (your email)
+                settings.DEFAULT_FROM_EMAIL,   # from (Brevo verified sender)
+                [settings.CONTACT_EMAIL],      # to   (where you receive)
                 fail_silently=False,
             )
 
             return success_response(
-                {"message": "Your message has been sent successfully.", },
+                {"message": "Your message has been sent successfully."},
                 status=status.HTTP_201_CREATED
             )
+
         return failure_response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     

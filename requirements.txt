@@ -27,3 +27,6 @@ django-unfold
 django-summernote
 drf-yasg
 django-tinymce==5.0.0
+django-import-expor
+pkg-config libcairo2-dev
+xhtml2pdf

@@ -16,17 +16,14 @@ django-celery-beat
 django-redis
 stripe
 django-schema-viewer
-stripe
 django-filter
 channels
 channels-redis
 daphne
-gunicorn
 argon2-cffi
 django-unfold
 django-summernote
 drf-yasg
 django-tinymce==5.0.0
-django-import-expor
-pkg-config libcairo2-dev
+django-import-export
 xhtml2pdf

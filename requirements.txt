@@ -26,4 +26,4 @@ argon2-cffi
 django-unfold
 django-summernote
 drf-yasg
-tinymce
+django-tinymce==3.2.1 

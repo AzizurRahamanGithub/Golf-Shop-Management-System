@@ -19,7 +19,7 @@ class Role(models.TextChoices):
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
-    is_active= models.BooleanField(default=False)
+    is_active= models.BooleanField(default=True)
     role = models.CharField(max_length=10, choices=Role.choices,
                             default=Role.LEARNER, null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=True)

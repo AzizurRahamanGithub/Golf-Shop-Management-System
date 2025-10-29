@@ -25,22 +25,44 @@ DATABASES = {
 # Static files for production
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# CORS: Restrict to your domains only
-CORS_ALLOW_ALL_ORIGINS = False
 
 # Production allowed hosts (IMPORTANT: Only allow your domains)
-ALLOWED_HOSTS = [
-    'yourdomain.com',
-    'www.yourdomain.com',
-]
+ALLOWED_HOSTS = ['*']
 
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    'https://yourdomain.com',
+    'http://localhost:3000',      
+    'http://localhost:3001',      
+    'http://localhost:5173',      
+    'http://localhost:8080',      
+    'http://127.0.0.1:5500',      
+    'http://127.0.0.1:5501',      
+    'http://127.0.0.1:8000',      
+    'http://localhost:8000',      
+    'http://172.252.13.75:7777',  
+    'http://172.252.13.75:6543',  
+    'http://172.252.13.75:6724',  
+    'http://172.252.13.75:8083',  
+    'http://206.162.244.143:6741',
+    'http://127.0.0.1:8000',
+    'http://31.97.99.135:8000',
+    
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://yourdomain.com'
-
+    'http://localhost:8000',
+    'http://127.0.0.1:5500',
+    'http://127.0.0.1:5501',
+    'http://127.0.0.1:8000',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://172.252.13.75:7777',  
+    'http://172.252.13.75:6543',  
+    'http://172.252.13.75:6724',  
+    'http://172.252.13.75:8083',  
+    'http://206.162.244.143:6741',
+    'http://127.0.0.1:8000',
+    'http://31.97.99.135:8000',
 ]
 
 

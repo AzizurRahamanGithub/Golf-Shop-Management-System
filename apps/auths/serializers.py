@@ -56,12 +56,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             full_name=full_name,
             first_name=first_name,
             last_name=last_name,
-            is_active= True,
+    
             username=username,
             **validated_data
         )
         user.set_password(password)
         user.role = 'user'
+        user.is_active= True
         user.save()
         return user
     

@@ -7,7 +7,7 @@ UNFOLD = {
     "DASHBOARD_TEMPLATE": "dashboard.html",
     "SITE_TITLE": "Admin Dashboard",
     "SITE_HEADER": "Administration",
-    "SITE_URL": "https://yaribabieex3-frontend.vercel.app/",
+    "SITE_URL": "https://puttputtplay.com/",
     "SITE_SYMBOL": "admin_panel_settings",
     "LOGO": lambda request: static("images/logo.png"),
     "SHOW_HISTORY": True,
@@ -18,13 +18,13 @@ UNFOLD = {
     "INLINE_ACTIONS": True,
 },
       "SITE_ICON": {
-        "light": lambda request: static("images/yaribabi.png"),  # light mode
-        "dark": lambda request: static("images/yaribabi.png"),  # dark mode
+        "light": lambda request: static("https://nyc3.digitaloceanspaces.com/smtech-space/uploads/yaribabi_1761965858_5080.png"),  # light mode
+        "dark": lambda request: static("https://nyc3.digitaloceanspaces.com/smtech-space/uploads/yaribabi_1761965858_5080.png"),  # dark mode
     },
     # "SITE_LOGO": lambda request: static("logo.svg"),  # both modes, optimise for 32px height
     "SITE_LOGO": {
-        "light": lambda request: static("images/yaribabi.png"),  # light mode
-        "dark": lambda request: static("images/yaribabi.png"),  # dark mode
+        "light": lambda request: static("https://nyc3.digitaloceanspaces.com/smtech-space/uploads/yaribabi_1761965858_5080.png"),  # light mode
+        "dark": lambda request: static("https://nyc3.digitaloceanspaces.com/smtech-space/uploads/yaribabi_1761965858_5080.png"),  # dark mode
     },
    
     "THEME": "light",

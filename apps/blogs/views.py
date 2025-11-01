@@ -10,9 +10,13 @@ from apps.core.response import failure_response, success_response
 import random
 from rest_framework import generics
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+
+    
 
 
 class RandomBlogListView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         # only published blogs
         blogs = Blog.objects.filter(blog_status='published')
@@ -21,6 +25,7 @@ class RandomBlogListView(APIView):
         return success_response("Random blogs retrieved successfully", serializer.data)
 
 class BlogListView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         # only published blogs
         blogs = Blog.objects.filter(blog_status='published')

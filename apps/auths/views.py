@@ -1,3 +1,4 @@
+from apps.cart.utils import merge_cart_after_login
 from ..core.response import failure_response, success_response
 from rest_framework import viewsets, permissions, status
 from ..core.pagination import CustomPagination
@@ -307,7 +308,7 @@ class LoginView(APIView):
             refresh = CustomRefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-
+            merge_cart_after_login(request, user)
             response = Response({
                 'success': True,
                 'statusCode': status.HTTP_200_OK,

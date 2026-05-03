@@ -3,14 +3,23 @@ from apps.auths.models import CustomUser
 from apps.products.models import Shop, Package
 
 class Cart(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="cart")
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="carts",
+        null=True,
+        blank=True
+    )
+    session_key = models.CharField(max_length=40, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def total_price(self):
         return sum(item.total_price() for item in self.items.all())
 
     def __str__(self):
-        return f"Cart ({self.user})"
+        if self.user:
+            return f"Cart (User: {self.user})"
+        return f"Cart (Session: {self.session_key})"
 
 
 class CartItem(models.Model):

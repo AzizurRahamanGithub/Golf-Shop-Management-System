@@ -113,8 +113,13 @@ class ShopViewSet(DynamicModelViewSet):
         super().__init__(*args, **kwargs)
 
     def get_queryset(self):
-        # sudhu active shops return korbe
-        return Shop.objects.filter(is_active=True)
+        queryset = Shop.objects.filter(is_active=True)
+
+        category_id = self.request.query_params.get('category_id')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        return queryset
 
         
         

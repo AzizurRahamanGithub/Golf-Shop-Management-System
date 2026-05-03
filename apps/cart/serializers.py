@@ -37,6 +37,26 @@ class CartItemSerializer(serializers.ModelSerializer):
         if not data.get("shop") and not data.get("package"):
             raise serializers.ValidationError("Either shop_id or package_id is required.")
         return data
+    
+    def create(self, validated_data):
+        cart = validated_data['cart']
+        shop = validated_data.get('shop')
+        package = validated_data.get('package')
+        quantity = validated_data.get('quantity', 1)
+
+        item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            shop=shop,
+            package=package,
+            defaults={'quantity': quantity}
+        )
+
+        # যদি আগেই থাকে → quantity বাড়বে
+        if not created:
+            item.quantity += quantity
+            item.save()
+
+        return item
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -50,3 +70,22 @@ class CartSerializer(serializers.ModelSerializer):
 
     def get_total(self, obj):
         return obj.total_price()
+    
+    def create(self, validated_data):
+        cart = validated_data['cart']
+        shop = validated_data.get('shop')
+        package = validated_data.get('package')
+        quantity = validated_data.get('quantity', 1)
+
+        item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            shop=shop,
+            package=package,
+            defaults={'quantity': quantity}
+        )
+
+        if not created:
+            item.quantity += quantity
+            item.save()
+
+        return item

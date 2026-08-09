@@ -23,27 +23,80 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # 1️⃣  Create Payment Intent API
 # =====================================================
 class CreatePaymentIntentView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:
-            cart = Cart.objects.filter(user=request.user).order_by('-created_at').first()
-            if not cart:
-                return failure_response("Cart does not exist.", {}, status.HTTP_400_BAD_REQUEST)
+            shop_ids = []
+            shops_val = request.data.get("shops")
+            if isinstance(shops_val, list):
+                shop_ids.extend([int(x) for x in shops_val if x])
+            shop_val = request.data.get("shop")
+            if shop_val:
+                try:
+                    shop_ids.append(int(shop_val))
+                except (ValueError, TypeError):
+                    pass
+            shop_ids = list(set(shop_ids))
 
-            if not cart.items.exists():
-                return failure_response("Cart is empty.", {}, status.HTTP_400_BAD_REQUEST)
+            package_ids = []
+            packages_val = request.data.get("packages")
+            if isinstance(packages_val, list):
+                package_ids.extend([int(x) for x in packages_val if x])
+            package_val = request.data.get("package")
+            if package_val:
+                try:
+                    package_ids.append(int(package_val))
+                except (ValueError, TypeError):
+                    pass
+            package_ids = list(set(package_ids))
 
-            # Calculate total price
-            total_price = sum(item.total_price() for item in cart.items.all())
-            amount = int(total_price * 100)  # convert to cents
+            if not shop_ids and not package_ids:
+                return failure_response("At least one shop or package must be selected.", {}, status.HTTP_400_BAD_REQUEST)
 
-            # ✅ Create PaymentIntent (no confirmation yet)
+            # Secure total price calculation using database
+            total_price = Decimal('0.00')
+            if shop_ids:
+                shops_qs = Shop.objects.filter(id__in=shop_ids)
+                total_price += sum(shop.price for shop in shops_qs)
+            if package_ids:
+                packages_qs = Package.objects.filter(id__in=package_ids)
+                total_price += sum(package.price for package in packages_qs)
+
+            tax = (total_price * Decimal('0.05')).quantize(Decimal('0.01'))
+
+            coupon_code = request.data.get("coupon_code", "").strip()
+            discount_amount = Decimal('0.00')
+            if coupon_code:
+                try:
+                    from apps.coupon.models import Coupon
+                    coupon = Coupon.objects.get(code__iexact=coupon_code, is_active=True)
+                    if not coupon.is_expired() and coupon.remaining_uses() > 0:
+                        if coupon.discount_type == 'percentage':
+                            discount_amount = (total_price * (coupon.discount_value / Decimal('100'))).quantize(Decimal('0.01'))
+                        elif coupon.discount_type == 'fixed':
+                            discount_amount = Decimal(coupon.discount_value).quantize(Decimal('0.01'))
+                except Exception:
+                    pass
+
+            if discount_amount > total_price:
+                discount_amount = total_price
+
+            final_total = (total_price + tax - discount_amount).quantize(Decimal('0.01'))
+            amount = int(final_total * 100)  # convert to cents
+
+            # ✅ Create PaymentIntent
+            metadata = {}
+            if request.user and request.user.is_authenticated:
+                metadata["user_id"] = request.user.id
+            elif request.session and request.session.session_key:
+                metadata["session_key"] = request.session.session_key
+
             intent = stripe.PaymentIntent.create(
                 amount=amount,
                 currency="usd",
-                payment_method_types=["card"],  # ← Use this for manual confirmation
-                metadata={"user_id": request.user.id},
+                payment_method_types=["card"],
+                metadata=metadata,
             )
 
             return success_response(
@@ -65,34 +118,18 @@ class CreatePaymentIntentView(APIView):
 # =====================================================
 
 class BookingValidationView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:
-            # Get the cart for the authenticated user
-            cart = Cart.objects.filter(user=request.user).order_by('-created_at').first()
-
-            if not cart:
-                return failure_response(
-                    message="Cart does not exist.",
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            if not cart.items.exists():
-                return failure_response(
-                    message="Cart is empty.",
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Initialize the serializer with request data and context (user, cart)
+            # Initialize the serializer with request data directly
             serializer = BookingValidationSerializer(
                 data=request.data,
-                context={'request': request, 'cart': cart}  # Pass the cart to the context
+                context={'request': request}
             )
 
             # Step 1: Perform validation
             if serializer.is_valid():
-                # Step 2: Return a successful response with validated data
                 validated_data = serializer.validated_data
                 return success_response(
                     message="Booking fields validated successfully.",
@@ -113,7 +150,6 @@ class BookingValidationView(APIView):
             )
 
         except Exception as e:
-            # Log the error and return a server error response
             logger.error(f"Error in validating booking fields: {str(e)}")
             return failure_response(
                 message="Unexpected error occurred.",
@@ -124,7 +160,7 @@ class BookingValidationView(APIView):
             
             
 class ConfirmBookingView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:
@@ -142,23 +178,16 @@ class ConfirmBookingView(APIView):
                     status.HTTP_400_BAD_REQUEST
                 )
 
-            # Get user's cart
-            cart = Cart.objects.filter(user=request.user).order_by('-created_at').first()
-            if not cart:
-                return failure_response("Cart does not exist.", {}, status.HTTP_400_BAD_REQUEST)
-
-            if not cart.items.exists():
-                return failure_response("Cart is empty.", {}, status.HTTP_400_BAD_REQUEST)
-
-            # ✅ Create Booking
+            # ✅ Create Booking directly using request data
             serializer = BookingSerializer(
                 data=request.data,
-                context={'request': request, 'cart': cart}
+                context={'request': request}
             )
 
             if serializer.is_valid():
+                booking_user = request.user if request.user.is_authenticated else None
                 booking = serializer.save(
-                    user=request.user,
+                    user=booking_user,
                     payment_id=payment_intent_id
                 )
 
@@ -170,9 +199,6 @@ class ConfirmBookingView(APIView):
                     status='completed',
                     method='card'
                 )
-
-                # ✅ Clear Cart
-                cart.items.all().delete()
 
                 return success_response(
                     "Booking created successfully and payment confirmed.",
